@@ -314,11 +314,44 @@ footer { border-top:1px solid var(--border); padding:28px 48px; display:flex; ju
     });
   }, { threshold: 0.1 });
   document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-  function handleSignup(src) {
-    const email = document.getElementById(src+'-email').value.trim();
-    if (!email || !email.includes('@')) { document.getElementById(src+'-email').style.borderColor='var(--accent)'; document.getElementById(src+'-email').focus(); return; }
-    document.getElementById(src+'-form').style.display='none';
-    document.getElementById(src+'-success').style.display='block';
+  async function handleSignup(src) {
+    const emailEl = document.getElementById(src+'-email');
+    const email = emailEl.value.trim();
+    if (!email || !email.includes('@')) {
+      emailEl.style.borderColor = 'var(--accent)';
+      emailEl.focus();
+      return;
+    }
+    const btn = document.querySelector('#' + src + '-form button');
+    btn.textContent = 'Submitting...';
+    btn.disabled = true;
+    try {
+      const res = await fetch('https://a.klaviyo.com/client/subscriptions/?company_id=TvEYF6', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'revision': '2023-12-15' },
+        body: JSON.stringify({
+          data: {
+            type: 'subscription',
+            attributes: {
+              profile: { data: { type: 'profile', attributes: { email: email } } }
+            },
+            relationships: {
+              list: { data: { type: 'list', id: 'VJJ8ZN' } }
+            }
+          }
+        })
+      });
+      if (res.ok || res.status === 202) {
+        document.getElementById(src+'-form').style.display = 'none';
+        document.getElementById(src+'-success').style.display = 'block';
+      } else {
+        throw new Error('Failed');
+      }
+    } catch(e) {
+      btn.textContent = 'Try again';
+      btn.disabled = false;
+      emailEl.style.borderColor = 'red';
+    }
   }
   function scrollToWaitlist() { document.getElementById('waitlist').scrollIntoView({behavior:'smooth'}); }
   document.getElementById('hero-email').addEventListener('keydown', e => { if(e.key==='Enter') handleSignup('hero'); });
