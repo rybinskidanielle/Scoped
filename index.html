@@ -341,14 +341,17 @@ footer { border-top:1px solid var(--border); padding:28px 48px; display:flex; ju
           }
         })
       });
-      if (res.ok || res.status === 202) {
+      // 202 = success, 409 = already subscribed — both show success to user
+      if (res.status === 202 || res.status === 409 || res.ok) {
         document.getElementById(src+'-form').style.display = 'none';
         document.getElementById(src+'-success').style.display = 'block';
       } else {
+        const body = await res.text();
+        console.error('Klaviyo error:', res.status, body);
         throw new Error('Failed');
       }
     } catch(e) {
-      btn.textContent = 'Try again';
+      btn.textContent = 'Try again →';
       btn.disabled = false;
       emailEl.style.borderColor = 'red';
     }
