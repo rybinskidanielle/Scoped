@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dark Design System</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --color-bg:              #090B1E;
+      --color-surface:         #0D1028;
+      --color-surface-2:       #111435;
+      --color-border:          #1A2448;
+      --color-border-bright:   rgba(74, 92, 255, 0.5);
+      --color-accent:          #4A5CFF;
+      --color-accent-light:    #7B8FFF;
+      --color-accent-dim:      rgba(74, 92, 255, 0.15);
+      --color-glow:            rgba(100, 120, 255, 0.3);
+      --color-glow-soft:       rgba(100, 120, 255, 0.1);
+      --color-text-primary:    #FFFFFF;
+      --color-text-secondary:  #B0B8D0;
+      --color-text-muted:      #48527A;
+      --font-display:          'Inter', sans-serif;
+      --font-mono:             'JetBrains Mono', monospace;
+      --radius-sm:             4px;
+      --radius-md:             8px;
+      --radius-lg:             16px;
+      --radius-xl:             24px;
+      --radius-pill:           999px;
+      --spacing-base:          8px;
+      --glow-purple:           rgba(120, 80, 255, 0.7);
+      --glow-gold:             rgba(255, 180, 60, 0.5);
+
+      /* gradient shorthands */
+      --grad-accent:  linear-gradient(135deg, #4A5CFF 0%, #7B4FFF 100%);
+      --grad-surface: linear-gradient(160deg, #111435 0%, #0D1028 100%);
+      --grad-border:  linear-gradient(135deg, rgba(150,80,255,0.8) 0%, rgba(74,92,255,0.4) 40%, rgba(30,20,80,0.1) 60%, rgba(200,130,30,0.4) 80%, rgba(255,180,40,0.7) 100%);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font-display);
+      background: var(--color-bg);
+      color: var(--color-text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ══════════════════════════════════
+       ANIMATIONS
+    ══════════════════════════════════ */
+    @keyframes twinkle {
+      0%, 100% { opacity: 0; }
+      50% { opacity: var(--op, 0.7); }
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+    @keyframes spin-slow {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+    @keyframes spin-rev {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(-360deg); }
+    }
+    @keyframes pulse-glow {
+      0%, 100% { opacity: 0.5; transform: scale(1); }
+      50%       { opacity: 1;   transform: scale(1.06); }
+    }
+    @keyframes gradient-shift {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    @keyframes border-rotate {
+      from { --angle: 0deg; }
+      to   { --angle: 360deg; }
+    }
+    @keyframes shimmer {
+      0%   { transform: translateX(-100%); }
+      100% { transform: translateX(200%); }
+    }
+    @keyframes float-up {
+      0%   { opacity: 0; transform: translateY(20px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes scan-line {
+      0%   { top: 0%; opacity: 0.6; }
+      100% { top: 100%; opacity: 0; }
+    }
+    @keyframes data-stream {
+      0%   { transform: translateY(0); opacity: 1; }
+      100% { transform: translateY(-40px); opacity: 0; }
+    }
+
+    /* ══════════════════════════════════
+       NAV
+    ══════════════════════════════════ */
+    .ds-nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(9,11,30,0.88);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--color-border);
+      padding: 0 32px;
+      display: flex; align-items: center; gap: 32px;
+      height: 52px;
+    }
+    .ds-nav-brand {
+      font-size: 0.78rem; font-weight: 700;
+      font-family: var(--font-mono);
+      background: var(--grad-accent);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 0.06em;
+    }
+    .ds-nav-links { display: flex; gap: 24px; list-style: none; }
+    .ds-nav-links a {
+      font-size: 0.75rem; color: var(--color-text-muted);
+      text-decoration: none; transition: color 0.2s;
+    }
+    .ds-nav-links a:hover { color: var(--color-text-primary); }
+
+    /* ══════════════════════════════════
+       HERO
+    ══════════════════════════════════ */
+    .hero {
+      position: relative; min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center; overflow: hidden;
+      padding: 80px 24px;
+      background: #090B1E;
+    }
+    .hero-bg-radial {
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% 50%, #141840 0%, #090B1E 70%);
+      z-index: 0;
+    }
+    .hero-grid {
+      position: absolute; inset: 0; z-index: 1; overflow: hidden;
+    }
+    .hero-grid svg {
+      position: absolute; bottom: 0; left: 50%;
+      transform: translateX(-50%); width: 140%; opacity: 0.18;
+    }
+    .stars { position: absolute; inset: 0; z-index: 2; }
+    .star {
+      position: absolute; border-radius: 50%; background: #fff;
+      opacity: 0; animation: twinkle var(--d,4s) var(--delay,0s) infinite;
+    }
+    .hero-glow {
+      position: absolute; z-index: 3;
+      width: 700px; height: 700px; border-radius: 50%;
+      background: radial-gradient(ellipse at center,
+        rgba(74,92,255,0.2) 0%, rgba(74,92,255,0.06) 40%, transparent 70%);
+      top: 50%; left: 50%;
+      transform: translate(-50%,-50%);
+      pointer-events: none;
+      animation: pulse-glow 5s ease-in-out infinite;
+    }
+    .orb-container {
+      position: absolute; z-index: 4;
+      width: 520px; height: 520px;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -52%);
+    }
+    .orb-ring-outermost {
+      position: absolute; inset: 0; border-radius: 50%;
+      border: 1px solid rgba(74,92,255,0.1);
+      animation: spin-slow 30s linear infinite;
+    }
+    .orb-ring-outer {
+      position: absolute; inset: 20px; border-radius: 50%;
+      border: 1px solid rgba(74,92,255,0.18);
+      animation: spin-rev 20s linear infinite;
+    }
+    .orb-sphere {
+      position: absolute; inset: 60px; border-radius: 50%;
+      border: 1px solid rgba(74,92,255,0.3);
+      box-shadow: 0 0 60px rgba(74,92,255,0.15), inset 0 0 60px rgba(74,92,255,0.08);
+    }
+    .orb-sphere::before, .orb-sphere::after {
+      content: ''; position: absolute; inset: -1px;
+      border-radius: 50%; border: 1px solid rgba(74,92,255,0.12);
+    }
+    .orb-sphere::before { transform: rotateX(70deg); }
+    .orb-sphere::after  { transform: rotateY(70deg); }
+    .orb-waves { position: absolute; inset: 0; }
+    .crosshair {
+      position: absolute; z-index: 5;
+      color: rgba(74,92,255,0.45);
+      font-size: 14px; font-family: var(--font-mono);
+      font-weight: 600; line-height: 1;
+    }
+    .ch-tl { top:28px; left:28px; }
+    .ch-tr { top:28px; right:28px; }
+    .ch-bl { bottom:28px; left:28px; }
+    .ch-br { bottom:28px; right:28px; }
+    .hud-chip-wrap {
+      position: relative; z-index: 10;
+      display: flex; align-items: center; gap: 10px; margin-bottom: 36px;
+      animation: float-up 0.8s ease both;
+    }
+    .hud-bracket {
+      color: rgba(74,92,255,0.55); font-family: var(--font-mono);
+      font-size: 0.75rem; letter-spacing: 0.05em;
+    }
+    .ai-chip {
+      width: 48px; height: 48px;
+      background: rgba(15,18,48,0.95);
+      border: 1px solid rgba(74,92,255,0.6);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em;
+      color: var(--color-accent-light); font-family: var(--font-mono);
+      box-shadow: 0 0 16px rgba(74,92,255,0.25), inset 0 0 8px rgba(74,92,255,0.1);
+    }
+    .label-tag {
+      position: relative; z-index: 10;
+      display: inline-block;
+      font-size: 0.6rem; font-weight: 600;
+      letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--color-accent-light);
+      border: 1px solid rgba(74,92,255,0.4);
+      padding: 5px 14px; border-radius: var(--radius-sm);
+      margin-bottom: 20px;
+      background: rgba(74,92,255,0.06);
+      font-family: var(--font-mono);
+      animation: float-up 0.9s 0.1s ease both;
+    }
+    .hero-title {
+      position: relative; z-index: 10;
+      font-size: clamp(2.8rem, 6.5vw, 4.5rem);
+      font-weight: 800; line-height: 1.1;
+      letter-spacing: -0.03em; color: #fff;
+      margin-bottom: 20px; max-width: 680px;
+      animation: float-up 1s 0.2s ease both;
+    }
+    .hero-sub {
+      position: relative; z-index: 10;
+      font-size: 0.95rem; color: var(--color-text-secondary);
+      line-height: 1.7; max-width: 480px;
+      animation: float-up 1s 0.35s ease both;
+    }
+
+    /* ══════════════════════════════════
+       DS LAYOUT
+    ══════════════════════════════════ */
+    .ds-wrap { max-width: 1100px; margin: 0 auto; padding: 80px 24px 120px; }
+    .ds-section-title {
+      font-size: 0.62rem; font-weight: 600; letter-spacing: 0.2em;
+      text-transform: uppercase; color: var(--color-accent-light);
+      font-family: var(--font-mono); margin-bottom: 8px;
+    }
+    .ds-section-heading {
+      font-size: 1.5rem; font-weight: 700;
+      color: var(--color-text-primary);
+      margin-bottom: 32px; padding-bottom: 16px;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .ds-block { margin-bottom: 80px; }
+
+    /* ══════════════════════════════════
+       COLOR SWATCHES
+    ══════════════════════════════════ */
+    .swatch-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 12px;
+    }
+    .swatch {
+      border-radius: var(--radius-md); overflow: hidden;
+      border: 1px solid var(--color-border); transition: border-color 0.2s, transform 0.2s;
+    }
+    .swatch:hover { border-color: var(--color-border-bright); transform: translateY(-2px); }
+    .swatch-color { height: 72px; }
+    .swatch-color.gradient {
+      background-size: 200% 200%;
+      animation: gradient-shift 4s ease infinite;
+    }
+    .swatch-info { background: var(--color-surface); padding: 10px 12px; }
+    .swatch-info strong { display: block; font-size: 0.75rem; color: var(--color-text-primary); margin-bottom: 2px; }
+    .swatch-info span { font-size: 0.65rem; color: var(--color-text-muted); font-family: var(--font-mono); }
+
+    /* ══════════════════════════════════
+       TYPOGRAPHY
+    ══════════════════════════════════ */
+    .type-stack { display: flex; flex-direction: column; gap: 10px; }
+    .type-row {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 20px 24px;
+      display: flex; align-items: center; gap: 24px;
+      transition: border-color 0.2s;
+    }
+    .type-row:hover { border-color: var(--color-border-bright); }
+    .type-meta { min-width: 110px; flex-shrink: 0; }
+    .type-meta .tag {
+      font-size: 0.6rem; font-weight: 600; font-family: var(--font-mono);
+      color: var(--color-text-muted); letter-spacing: 0.1em; text-transform: uppercase;
+    }
+    .type-meta .sz { font-size: 0.62rem; color: var(--color-accent-light); font-family: var(--font-mono); }
+
+    /* ══════════════════════════════════
+       BUTTONS
+    ══════════════════════════════════ */
+    .btn-row { display: flex; flex-wrap: wrap; gap: 12px; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 11px 22px; border-radius: var(--radius-md);
+      font-size: 0.875rem; font-weight: 600;
+      cursor: pointer; transition: all 0.25s;
+      border: none; font-family: var(--font-display);
+      letter-spacing: 0.01em; position: relative; overflow: hidden;
+    }
+
+    /* shimmer layer on all buttons */
+    .btn::after {
+      content: '';
+      position: absolute; top: 0; left: 0;
+      width: 40%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+      transform: translateX(-100%);
+    }
+    .btn:hover::after { animation: shimmer 0.6s ease; }
+
+    .btn-primary {
+      background: var(--grad-accent);
+      background-size: 200% 200%;
+      color: #fff;
+      box-shadow: 0 0 20px rgba(74,92,255,0.35), 0 4px 12px rgba(0,0,0,0.3);
+    }
+    .btn-primary:hover {
+      background-position: 100% 50%;
+      box-shadow: 0 0 35px rgba(74,92,255,0.55), 0 6px 20px rgba(0,0,0,0.3);
+      transform: translateY(-2px);
+    }
+
+    /* gradient border button — uses pseudo-element trick */
+    .btn-gradient-border {
+      background: var(--color-surface);
+      color: var(--color-text-primary);
+      border: none;
+      position: relative;
+      z-index: 0;
+    }
+    .btn-gradient-border::before {
+      content: '';
+      position: absolute; inset: -1px;
+      border-radius: calc(var(--radius-md) + 1px);
+      background: var(--grad-accent);
+      z-index: -1;
+    }
+    .btn-gradient-border:hover { transform: translateY(-2px); background: var(--color-surface-2); }
+    .btn-gradient-border:hover::before {
+      background: linear-gradient(135deg, #7B4FFF 0%, #4A5CFF 50%, #00C8FF 100%);
+    }
+
+    .btn-outline {
+      background: rgba(74,92,255,0.07);
+      color: var(--color-accent-light);
+      border: 1px solid rgba(74,92,255,0.4);
+    }
+    .btn-outline:hover {
+      background: rgba(74,92,255,0.14);
+      border-color: rgba(74,92,255,0.75);
+      transform: translateY(-2px);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--color-text-secondary);
+      border: 1px solid var(--color-border);
+    }
+    .btn-ghost:hover { color: var(--color-text-primary); border-color: var(--color-border-bright); }
+
+    /* ══════════════════════════════════
+       STATUS INDICATORS (replace badges)
+    ══════════════════════════════════ */
+    .status-row { display: flex; flex-wrap: wrap; gap: 10px; }
+    .status-dot {
+      display: inline-flex; align-items: center; gap: 7px;
+      font-size: 0.68rem; font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 6px 12px; border-radius: var(--radius-sm);
+      font-family: var(--font-mono);
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      color: var(--color-text-secondary);
+      transition: border-color 0.2s;
+    }
+    .status-dot:hover { border-color: var(--color-border-bright); }
+    .status-dot i {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--color-accent-light);
+      box-shadow: 0 0 6px var(--color-accent-light);
+      flex-shrink: 0;
+      animation: pulse-glow 2s ease-in-out infinite;
+    }
+    .status-dot.active { border-color: rgba(74,92,255,0.4); color: var(--color-accent-light); }
+    .status-dot.active i { background: #4A5CFF; box-shadow: 0 0 8px #4A5CFF; }
+    .status-dot.neutral i { background: var(--color-text-muted); box-shadow: none; animation: none; }
+
+    /* ══════════════════════════════════
+       CARDS
+    ══════════════════════════════════ */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .card {
+      background: var(--grad-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      transition: border-color 0.3s, box-shadow 0.3s, transform 0.25s;
+      position: relative; overflow: hidden;
+    }
+    /* animated top-line on hover */
+    .card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--color-accent), rgba(123,79,255,0.8), transparent);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    /* scan line */
+    .card::after {
+      content: '';
+      position: absolute; left: 0; right: 0; height: 60px;
+      background: linear-gradient(180deg, transparent, rgba(74,92,255,0.04), transparent);
+      top: 0; opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .card:hover {
+      border-color: rgba(74,92,255,0.45);
+      box-shadow: 0 0 50px rgba(74,92,255,0.12), 0 10px 40px rgba(0,0,0,0.35);
+      transform: translateY(-3px);
+    }
+    .card:hover::before { opacity: 1; }
+    .card:hover::after  { opacity: 1; animation: scan-line 1.2s linear infinite; }
+
+    /* SVG icon in card */
+    .card-icon {
+      width: 44px; height: 44px;
+      border-radius: var(--radius-md);
+      background: rgba(74,92,255,0.1);
+      border: 1px solid rgba(74,92,255,0.25);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 18px;
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+    .card:hover .card-icon {
+      background: rgba(74,92,255,0.18);
+      box-shadow: 0 0 16px rgba(74,92,255,0.2);
+    }
+    .card-icon svg { color: var(--color-accent-light); }
+
+    .card h3 {
+      font-size: 0.95rem; font-weight: 700;
+      color: var(--color-text-primary); margin-bottom: 10px;
+    }
+    .card p {
+      font-size: 0.82rem; color: var(--color-text-secondary); line-height: 1.7;
+    }
+
+    /* ══════════════════════════════════
+       STATS
+    ══════════════════════════════════ */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 14px;
+    }
+    .stat-card {
+      background: var(--grad-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 22px 24px;
+      position: relative; overflow: hidden;
+      transition: border-color 0.3s, transform 0.25s;
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+      background: var(--grad-accent);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .stat-card:hover { border-color: rgba(74,92,255,0.4); transform: translateY(-2px); }
+    .stat-card:hover::before { opacity: 1; }
+    .stat-label {
+      font-size: 0.6rem; font-weight: 600; color: var(--color-text-muted);
+      text-transform: uppercase; letter-spacing: 0.14em;
+      font-family: var(--font-mono); margin-bottom: 12px;
+    }
+    .stat-value {
+      font-size: 2rem; font-weight: 800;
+      line-height: 1; letter-spacing: -0.02em; margin-bottom: 8px;
+      background: linear-gradient(135deg, #fff 0%, #B0B8D0 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .stat-sub {
+      font-size: 0.68rem; color: var(--color-text-muted);
+      font-family: var(--font-mono);
+    }
+    /* mini sparkline bar */
+    .stat-bar {
+      height: 3px; border-radius: 2px;
+      background: var(--color-border); margin-top: 14px; overflow: hidden;
+    }
+    .stat-bar-fill {
+      height: 100%; border-radius: 2px;
+      background: var(--grad-accent);
+      background-size: 200% 200%;
+      animation: gradient-shift 3s ease infinite;
+    }
+
+    /* ══════════════════════════════════
+       NEON SEARCH / INPUT BAR
+    ══════════════════════════════════ */
+    .neon-search-wrap {
+      display: flex; justify-content: center; padding: 20px 0;
+    }
+
+    /* wrapper handles the gradient border correctly */
+    .neon-search-outer {
+      width: 100%; max-width: 680px;
+      padding: 1.5px; /* border thickness */
+      border-radius: 21px;
+      background: var(--grad-border);
+      background-size: 300% 300%;
+      transition: background-position 0.6s ease, box-shadow 0.4s ease;
+      box-shadow:
+        -6px -6px 30px rgba(120,80,255,0.2),
+        6px  6px  30px rgba(200,130,30,0.15);
+    }
+    .neon-search-outer:hover,
+    .neon-search-outer:focus-within {
+      background-position: 100% 100%;
+      animation: gradient-shift 2.5s ease infinite;
+      box-shadow:
+        -8px -8px 40px rgba(120,80,255,0.45),
+        8px   8px 40px rgba(255,165,40,0.35),
+        0 0 60px rgba(74,92,255,0.2);
+    }
+
+    .neon-search-bar {
+      width: 100%;
+      background: rgba(10,12,30,0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 20px;
+      padding: 20px 20px 16px;
+      display: flex; flex-direction: column; gap: 16px;
+    }
+
+    .neon-search-text {
+      padding: 0 6px;
+      font-size: 1.2rem; font-weight: 500;
+      color: var(--color-text-primary);
+      line-height: 1.5; min-height: 56px;
+      letter-spacing: -0.01em;
+    }
+    .neon-cursor {
+      display: inline-block; color: var(--color-accent-light);
+      font-weight: 300;
+      animation: blink 1.1s step-end infinite; margin-left: 1px;
+    }
+    .neon-search-actions {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .neon-pill-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 8px 16px; border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--color-text-primary);
+      font-size: 0.875rem; font-weight: 600;
+      font-family: var(--font-display); cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .neon-pill-btn:hover { background: rgba(255,255,255,0.11); border-color: rgba(255,255,255,0.2); }
+    .neon-icon-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 36px; height: 36px; border-radius: 999px;
+      background: transparent; border: none;
+      color: rgba(255,255,255,0.3); cursor: pointer;
+      transition: color 0.2s; margin-left: 2px;
+    }
+    .neon-icon-btn:hover { color: rgba(255,255,255,0.65); }
+    .neon-mic-pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 7px 13px; border-radius: 999px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.09);
+      color: var(--color-text-secondary);
+      font-size: 0.85rem; font-weight: 500; margin-left: auto;
+    }
+    .neon-toggle {
+      width: 34px; height: 19px; border-radius: 999px;
+      background: rgba(74,92,255,0.3);
+      border: 1px solid rgba(74,92,255,0.4);
+      position: relative; cursor: pointer; flex-shrink: 0;
+    }
+    .neon-toggle-knob {
+      position: absolute; top: 2px; right: 2px;
+      width: 13px; height: 13px; border-radius: 50%;
+      background: #fff; box-shadow: 0 0 6px rgba(74,92,255,0.5);
+    }
+    .neon-send-btn {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: linear-gradient(135deg, #5B4FD0 0%, #3A3AA0 100%);
+      border: 1px solid rgba(120,90,255,0.5);
+      color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 0 14px rgba(100,80,255,0.4);
+      transition: box-shadow 0.2s, transform 0.15s;
+      flex-shrink: 0;
+    }
+    .neon-send-btn:hover { box-shadow: 0 0 26px rgba(100,80,255,0.7); transform: scale(1.07); }
+
+    /* ══════════════════════════════════
+       STANDARD INPUTS
+    ══════════════════════════════════ */
+    .input-row { display: flex; flex-direction: column; gap: 14px; max-width: 440px; }
+    .input-wrap { display: flex; flex-direction: column; gap: 6px; }
+    .input-label {
+      font-size: 0.7rem; font-weight: 600;
+      color: var(--color-text-secondary); letter-spacing: 0.04em;
+    }
+    .input-field {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 11px 14px;
+      font-size: 0.875rem; color: var(--color-text-primary);
+      font-family: var(--font-display); outline: none;
+      transition: border-color 0.25s, box-shadow 0.25s; width: 100%;
+    }
+    .input-field::placeholder { color: var(--color-text-muted); }
+    .input-field:focus {
+      border-color: rgba(74,92,255,0.65);
+      box-shadow: 0 0 0 3px rgba(74,92,255,0.12);
+    }
+
+    /* ══════════════════════════════════
+       HUD LABEL
+    ══════════════════════════════════ */
+    .hud-label {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 0.6rem; font-weight: 600; letter-spacing: 0.2em;
+      text-transform: uppercase; color: var(--color-accent-light);
+      font-family: var(--font-mono);
+    }
+    .hud-label::before { content: '[ '; color: rgba(74,92,255,0.45); }
+    .hud-label::after  { content: ' ]'; color: rgba(74,92,255,0.45); }
+
+    /* ══════════════════════════════════
+       GLASS PANEL
+    ══════════════════════════════════ */
+    .glass-panel {
+      background: rgba(13,16,40,0.65);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(74,92,255,0.18);
+      border-radius: var(--radius-lg); padding: 28px;
+      transition: border-color 0.3s;
+    }
+    .glass-panel:hover { border-color: rgba(74,92,255,0.38); }
+
+    /* ══════════════════════════════════
+       ANIMATED GRADIENT DIVIDER
+    ══════════════════════════════════ */
+    .grad-divider {
+      height: 1px; border: none;
+      background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(74,92,255,0.6) 30%,
+        rgba(123,79,255,0.8) 50%,
+        rgba(74,92,255,0.6) 70%,
+        transparent 100%);
+      background-size: 200% 100%;
+      animation: gradient-shift 4s ease infinite;
+      margin: 0 0 40px;
+    }
+
+    /* ══════════════════════════════════
+       TOKEN TABLE
+    ══════════════════════════════════ */
+    .token-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    .token-table th {
+      text-align: left; padding: 10px 16px;
+      font-size: 0.6rem; font-weight: 600; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--color-text-muted);
+      font-family: var(--font-mono); border-bottom: 1px solid var(--color-border);
+    }
+    .token-table td {
+      padding: 12px 16px; color: var(--color-text-secondary);
+      border-bottom: 1px solid rgba(26,36,72,0.5); vertical-align: middle;
+    }
+    .token-table tr:hover td { background: rgba(74,92,255,0.04); }
+    .token-name  { color: var(--color-accent-light); font-family: var(--font-mono); font-size: 0.78rem; }
+    .token-value { color: var(--color-text-primary); font-family: var(--font-mono); font-size: 0.78rem; }
+    .color-dot {
+      display: inline-block; width: 11px; height: 11px; border-radius: 50%;
+      vertical-align: middle; margin-right: 8px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ══ NAV ══════════════════════════════════════════ -->
+  <nav class="ds-nav">
+    <span class="ds-nav-brand">[ DESIGN SYSTEM ]</span>
+    <ul class="ds-nav-links">
+      <li><a href="#hero">Hero</a></li>
+      <li><a href="#colors">Colors</a></li>
+      <li><a href="#type">Type</a></li>
+      <li><a href="#components">Components</a></li>
+      <li><a href="#search">Input Bar</a></li>
+      <li><a href="#tokens">Tokens</a></li>
+    </ul>
+  </nav>
+
+  <!-- ══ HERO ══════════════════════════════════════════ -->
+  <section class="hero" id="hero">
+    <div class="hero-bg-radial"></div>
+    <div class="hero-grid">
+      <svg viewBox="0 0 1200 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <line x1="0"   y1="500" x2="1200" y2="500" stroke="#1E2B50" stroke-width="0.8"/>
+        <line x1="100" y1="430" x2="1100" y2="430" stroke="#1E2B50" stroke-width="0.6"/>
+        <line x1="200" y1="360" x2="1000" y2="360" stroke="#1E2B50" stroke-width="0.5"/>
+        <line x1="280" y1="300" x2="920"  y2="300" stroke="#1E2B50" stroke-width="0.4"/>
+        <line x1="340" y1="250" x2="860"  y2="250" stroke="#1E2B50" stroke-width="0.3"/>
+        <line x1="390" y1="210" x2="810"  y2="210" stroke="#1E2B50" stroke-width="0.2"/>
+        <line x1="600" y1="150" x2="0"    y2="500" stroke="#1E2B50" stroke-width="0.5"/>
+        <line x1="600" y1="150" x2="200"  y2="500" stroke="#1E2B50" stroke-width="0.4"/>
+        <line x1="600" y1="150" x2="400"  y2="500" stroke="#1E2B50" stroke-width="0.3"/>
+        <line x1="600" y1="150" x2="600"  y2="500" stroke="#1E2B50" stroke-width="0.3"/>
+        <line x1="600" y1="150" x2="800"  y2="500" stroke="#1E2B50" stroke-width="0.3"/>
+        <line x1="600" y1="150" x2="1000" y2="500" stroke="#1E2B50" stroke-width="0.4"/>
+        <line x1="600" y1="150" x2="1200" y2="500" stroke="#1E2B50" stroke-width="0.5"/>
+      </svg>
+    </div>
+    <div class="stars" id="stars"></div>
+    <div class="hero-glow"></div>
+    <div class="orb-container">
+      <div class="orb-ring-outermost"></div>
+      <div class="orb-ring-outer"></div>
+      <div class="orb-sphere"></div>
+      <svg class="orb-waves" viewBox="0 0 520 520" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M60 260 Q130 180 260 260 Q390 340 460 260" stroke="rgba(74,92,255,0.55)" stroke-width="1.5" fill="none"/>
+        <path d="M60 260 Q130 340 260 260 Q390 180 460 260" stroke="rgba(74,92,255,0.35)" stroke-width="1" fill="none"/>
+        <path d="M60 260 Q130 210 260 260 Q390 310 460 260" stroke="rgba(74,92,255,0.18)" stroke-width="0.8" fill="none"/>
+        <path d="M60 260 Q130 310 260 260 Q390 210 460 260" stroke="rgba(74,92,255,0.12)" stroke-width="0.8" fill="none"/>
+        <ellipse cx="260" cy="260" rx="200" ry="40" stroke="rgba(74,92,255,0.18)" stroke-width="0.8" fill="none"/>
+        <ellipse cx="260" cy="260" rx="40"  ry="200" stroke="rgba(74,92,255,0.12)" stroke-width="0.8" fill="none"/>
+      </svg>
+    </div>
+    <span class="crosshair ch-tl">+</span>
+    <span class="crosshair ch-tr">+</span>
+    <span class="crosshair ch-bl">+</span>
+    <span class="crosshair ch-br">+</span>
+    <div class="hud-chip-wrap">
+      <span class="hud-bracket">+–</span>
+      <div class="ai-chip">AT</div>
+      <span class="hud-bracket">–+</span>
+    </div>
+    <div class="label-tag">| · Next-Gen AI Engine · |</div>
+    <h1 class="hero-title">The intelligence<br/>behind every trade.</h1>
+    <p class="hero-sub">AI that continuously learns, adapts, and executes with precision — refining strategy in real-time.</p>
+  </section>
+
+  <!-- ══ DESIGN SYSTEM ══════════════════════════════════ -->
+  <div class="ds-wrap">
+
+    <!-- ── Colors ── -->
+    <div class="ds-block" id="colors">
+      <p class="ds-section-title">01 — Palette</p>
+      <h2 class="ds-section-heading">Color System</h2>
+      <div class="swatch-grid">
+        <div class="swatch"><div class="swatch-color" style="background:#090B1E"></div><div class="swatch-info"><strong>BG Primary</strong><span>#090B1E</span></div></div>
+        <div class="swatch"><div class="swatch-color" style="background:#0D1028"></div><div class="swatch-info"><strong>Surface</strong><span>#0D1028</span></div></div>
+        <div class="swatch"><div class="swatch-color" style="background:#111435"></div><div class="swatch-info"><strong>Surface 2</strong><span>#111435</span></div></div>
+        <div class="swatch"><div class="swatch-color" style="background:#1A2448"></div><div class="swatch-info"><strong>Border</strong><span>#1A2448</span></div></div>
+        <div class="swatch"><div class="swatch-color" style="background:#4A5CFF"></div><div class="swatch-info"><strong>Accent</strong><span>#4A5CFF</span></div></div>
+        <div class="swatch"><div class="swatch-color" style="background:#7B8FFF"></div><div class="swatch-info"><strong>Accent Light</strong><span>#7B8FFF</span></div></div>
+        <div class="swatch"><div class="swatch-color gradient" style="background:linear-gradient(135deg,#4A5CFF,#7B4FFF);background-size:200% 200%"></div><div class="swatch-info"><strong>Gradient A</strong><span>Blue → Violet</span></div></div>
+        <div class="swatch"><div class="swatch-color gradient" style="background:linear-gradient(135deg,#7B4FFF,#4A5CFF,#00C8FF);background-size:200% 200%"></div><div class="swatch-info"><strong>Gradient B</strong><span>Violet → Cyan</span></div></div>
+        <div class="swatch"><div class="swatch-color gradient" style="background:linear-gradient(135deg,rgba(120,80,255,0.9),rgba(74,92,255,0.5),rgba(255,180,40,0.8));background-size:200% 200%"></div><div class="swatch-info"><strong>Gradient C</strong><span>Neon Border</span></div></div>
+        <div class="swatch"><div class="swatch-color" style="background:#FFFFFF"></div><div class="swatch-info"><strong>Text Primary</strong><span>#FFFFFF</span></div></div>
+        <div class="swatch"><div class="swatch-color" style="background:#B0B8D0"></div><div class="swatch-info"><strong>Text Secondary</strong><span>#B0B8D0</span></div></div>
+        <div class="swatch"><div class="swatch-color" style="background:#48527A"></div><div class="swatch-info"><strong>Text Muted</strong><span>#48527A</span></div></div>
+      </div>
+    </div>
+
+    <!-- ── Typography ── -->
+    <div class="ds-block" id="type">
+      <p class="ds-section-title">02 — Typography</p>
+      <h2 class="ds-section-heading">Type Scale</h2>
+      <div class="type-stack">
+        <div class="type-row">
+          <div class="type-meta"><div class="tag">Display</div><div class="sz">64px / 800</div></div>
+          <span style="font-size:3rem;font-weight:800;letter-spacing:-0.03em;line-height:1;background:linear-gradient(135deg,#fff 30%,#B0B8D0 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Headline</span>
+        </div>
+        <div class="type-row">
+          <div class="type-meta"><div class="tag">H1</div><div class="sz">48px / 700</div></div>
+          <span style="font-size:2.2rem;font-weight:700;letter-spacing:-0.025em">Section Title</span>
+        </div>
+        <div class="type-row">
+          <div class="type-meta"><div class="tag">H2</div><div class="sz">32px / 700</div></div>
+          <span style="font-size:1.75rem;font-weight:700;letter-spacing:-0.02em">Sub-section Title</span>
+        </div>
+        <div class="type-row">
+          <div class="type-meta"><div class="tag">H3</div><div class="sz">20px / 600</div></div>
+          <span style="font-size:1.2rem;font-weight:600">Card / Component Heading</span>
+        </div>
+        <div class="type-row">
+          <div class="type-meta"><div class="tag">Body</div><div class="sz">16px / 400</div></div>
+          <span style="font-size:1rem;color:var(--color-text-secondary);line-height:1.65">Body text. Clear, readable, with comfortable line height for longer passages.</span>
+        </div>
+        <div class="type-row">
+          <div class="type-meta"><div class="tag">Small</div><div class="sz">14px / 400</div></div>
+          <span style="font-size:0.875rem;color:var(--color-text-muted)">Captions, helper text, supporting context</span>
+        </div>
+        <div class="type-row">
+          <div class="type-meta"><div class="tag">Mono / HUD</div><div class="sz">11px / 600</div></div>
+          <span class="hud-label" style="font-size:0.65rem">SYSTEM LABEL</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Components ── -->
+    <div class="ds-block" id="components">
+      <p class="ds-section-title">03 — Components</p>
+
+      <h2 class="ds-section-heading">Buttons</h2>
+      <div class="btn-row" style="margin-bottom:48px">
+        <button class="btn btn-primary">Primary Action</button>
+        <button class="btn btn-gradient-border">Gradient Border</button>
+        <button class="btn btn-outline">Outline</button>
+        <button class="btn btn-ghost">Ghost</button>
+      </div>
+
+      <hr class="grad-divider"/>
+
+      <h2 class="ds-section-heading">Status Indicators</h2>
+      <div class="status-row" style="margin-bottom:48px">
+        <span class="status-dot active"><i></i>Active</span>
+        <span class="status-dot active"><i></i>Connected</span>
+        <span class="status-dot active"><i></i>Processing</span>
+        <span class="status-dot"><i style="background:var(--color-text-muted);box-shadow:none;animation:none"></i>Idle</span>
+        <span class="status-dot neutral"><i class="neutral"></i>Offline</span>
+      </div>
+
+      <hr class="grad-divider"/>
+
+      <h2 class="ds-section-heading">Cards</h2>
+      <div class="card-grid" style="margin-bottom:48px">
+        <div class="card">
+          <div class="card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <h3>Low Latency Execution</h3>
+          <p>Sub-millisecond routing across distributed infrastructure with automatic failover.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </div>
+          <h3>Adaptive Processing</h3>
+          <p>Continuously refines parameters based on incoming signal patterns and conditions.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <h3>Boundary Controls</h3>
+          <p>Configurable thresholds and automated controls to stay within defined parameters.</p>
+        </div>
+      </div>
+
+      <hr class="grad-divider"/>
+
+      <h2 class="ds-section-heading">Stat Cards</h2>
+      <div class="stats-grid" style="margin-bottom:48px">
+        <div class="stat-card">
+          <div class="stat-label">Metric One</div>
+          <div class="stat-value">94.2%</div>
+          <div class="stat-sub">↑ +2.1 pts</div>
+          <div class="stat-bar"><div class="stat-bar-fill" style="width:94%"></div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Metric Two</div>
+          <div class="stat-value">12,847</div>
+          <div class="stat-sub">Updated just now</div>
+          <div class="stat-bar"><div class="stat-bar-fill" style="width:72%"></div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Metric Three</div>
+          <div class="stat-value">3.8x</div>
+          <div class="stat-sub">All-time high</div>
+          <div class="stat-bar"><div class="stat-bar-fill" style="width:85%"></div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Metric Four</div>
+          <div class="stat-value">99.9%</div>
+          <div class="stat-sub">Nominal</div>
+          <div class="stat-bar"><div class="stat-bar-fill" style="width:99%"></div></div>
+        </div>
+      </div>
+
+      <hr class="grad-divider"/>
+
+      <!-- ── SEARCH BAR ── -->
+      <h2 class="ds-section-heading" id="search">Search / Input Bar</h2>
+      <div class="neon-search-wrap" style="margin-bottom:48px">
+        <div class="neon-search-outer">
+          <div class="neon-search-bar">
+            <div class="neon-search-text">
+              <span>Provide complex widgets to improve d</span><span class="neon-cursor">|</span>
+            </div>
+            <div class="neon-search-actions">
+              <button class="neon-pill-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/><path d="M8 12h8M12 8v8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                <span>Prompts</span>
+              </button>
+              <button class="neon-icon-btn">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <div class="neon-mic-pill">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="9" y="2" width="6" height="12" rx="3" stroke="currentColor" stroke-width="1.6"/><path d="M5 10a7 7 0 0014 0M12 19v3M9 22h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                <span>Mic</span>
+                <div class="neon-toggle"><div class="neon-toggle-knob"></div></div>
+              </div>
+              <button class="neon-send-btn">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="ds-section-heading">Standard Inputs</h2>
+      <div class="input-row" style="margin-bottom:48px">
+        <div class="input-wrap">
+          <label class="input-label">Label</label>
+          <input class="input-field" type="text" placeholder="Placeholder text..."/>
+        </div>
+        <div class="input-wrap">
+          <label class="input-label">Another Field</label>
+          <input class="input-field" type="text" placeholder="Enter value"/>
+        </div>
+      </div>
+
+      <hr class="grad-divider"/>
+
+      <h2 class="ds-section-heading">Glass Panel</h2>
+      <div class="glass-panel" style="max-width:500px;margin-bottom:48px">
+        <div class="hud-label" style="margin-bottom:14px">PANEL LABEL</div>
+        <div style="font-size:1.05rem;font-weight:700;margin-bottom:10px">Panel Title</div>
+        <p style="font-size:0.85rem;color:var(--color-text-secondary);line-height:1.65">
+          A general-purpose glass surface component for dashboard panels, modals, and overlay content.
+        </p>
+      </div>
+    </div>
+
+    <!-- ── Tokens ── -->
+    <div class="ds-block" id="tokens">
+      <p class="ds-section-title">04 — Tokens</p>
+      <h2 class="ds-section-heading">Design Tokens</h2>
+      <table class="token-table">
+        <thead>
+          <tr><th>Token</th><th>Value</th><th>Usage</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="token-name">--color-bg</td><td class="token-value"><span class="color-dot" style="background:#090B1E"></span>#090B1E</td><td>Page background</td></tr>
+          <tr><td class="token-name">--color-surface</td><td class="token-value"><span class="color-dot" style="background:#0D1028"></span>#0D1028</td><td>Cards, panels</td></tr>
+          <tr><td class="token-name">--color-border</td><td class="token-value"><span class="color-dot" style="background:#1A2448"></span>#1A2448</td><td>Borders, dividers</td></tr>
+          <tr><td class="token-name">--color-accent</td><td class="token-value"><span class="color-dot" style="background:#4A5CFF"></span>#4A5CFF</td><td>Primary actions, glows</td></tr>
+          <tr><td class="token-name">--color-accent-light</td><td class="token-value"><span class="color-dot" style="background:#7B8FFF"></span>#7B8FFF</td><td>Labels, tags, icons</td></tr>
+          <tr><td class="token-name">--color-glow</td><td class="token-value">rgba(100,120,255,0.3)</td><td>Box shadows, radial effects</td></tr>
+          <tr><td class="token-name">--grad-accent</td><td class="token-value">135deg #4A5CFF → #7B4FFF</td><td>Buttons, fills, bars</td></tr>
+          <tr><td class="token-name">--grad-border</td><td class="token-value">Purple → Gold</td><td>Neon input border</td></tr>
+          <tr><td class="token-name">--glow-purple</td><td class="token-value">rgba(120,80,255,0.7)</td><td>Hover glows, neon edge</td></tr>
+          <tr><td class="token-name">--glow-gold</td><td class="token-value">rgba(255,180,60,0.5)</td><td>Warm neon edge</td></tr>
+          <tr><td class="token-name">--color-text-primary</td><td class="token-value"><span class="color-dot" style="background:#fff;border:1px solid #333"></span>#FFFFFF</td><td>Headlines, values</td></tr>
+          <tr><td class="token-name">--color-text-secondary</td><td class="token-value"><span class="color-dot" style="background:#B0B8D0"></span>#B0B8D0</td><td>Body copy</td></tr>
+          <tr><td class="token-name">--color-text-muted</td><td class="token-value"><span class="color-dot" style="background:#48527A"></span>#48527A</td><td>Placeholder, captions</td></tr>
+          <tr><td class="token-name">--font-display</td><td class="token-value">'Inter', sans-serif</td><td>All UI text</td></tr>
+          <tr><td class="token-name">--font-mono</td><td class="token-value">'JetBrains Mono'</td><td>HUD labels, code, tags</td></tr>
+          <tr><td class="token-name">--radius-sm / md / lg</td><td class="token-value">4px / 8px / 16px</td><td>Tags / Buttons / Cards</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <script>
+    const starsEl = document.getElementById('stars');
+    for (let i = 0; i < 90; i++) {
+      const s = document.createElement('div');
+      s.className = 'star';
+      const size = Math.random() * 2 + 0.4;
+      s.style.cssText = `
+        width:${size}px;height:${size}px;
+        top:${Math.random()*100}%;left:${Math.random()*100}%;
+        --d:${(Math.random()*5+3).toFixed(1)}s;
+        --delay:${(Math.random()*6).toFixed(1)}s;
+        --op:${(Math.random()*0.5+0.2).toFixed(2)};
+      `;
+      starsEl.appendChild(s);
+    }
+  </script>
+
+</body>
+</html>

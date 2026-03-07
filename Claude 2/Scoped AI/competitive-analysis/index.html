@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<!-- design-system-version: 1.0 | synced with design-system.html | last updated: 2026-03-07 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scoped — Competitive Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Design System Tokens — synced with design-system.html -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter','ui-sans-serif','system-ui','-apple-system','sans-serif'],
+                        mono: ['JetBrains Mono','ui-monospace','monospace']
+                    },
+                    colors: {
+                        /* ── DS Surface ── */
+                        bg:      { DEFAULT:'#090B1E' },
+                        surface: { DEFAULT:'#0D1028', 2:'#111435' },
+                        border:  { DEFAULT:'#1A2448', bright:'rgba(74,92,255,0.5)' },
+                        /* ── DS Accent ── */
+                        accent:  { DEFAULT:'#4A5CFF', light:'#7B8FFF', dim:'rgba(74,92,255,0.15)' },
+                        /* ── DS Text ── */
+                        ink:     { primary:'#FFFFFF', secondary:'#B0B8D0', muted:'#48527A' },
+                        /* keep sky/zinc for any legacy classes still used */
+                        sky:  { 50:'#f0f9ff',100:'#e0f2fe',200:'#bae6fd',300:'#7dd3fc',400:'#38bdf8',500:'#0ea5e9',600:'#0284c7',700:'#02649b',800:'#01446e',900:'#012e40' },
+                        zinc: { 50:'#fafafa',100:'#f4f4f5',200:'#e4e4e7',300:'#d4d4d8',400:'#a1a1aa',500:'#71717a',600:'#52525b',700:'#3f3f46',800:'#27272a',900:'#18181b',950:'#09090b' }
+                    },
+                    backgroundImage: {
+                        'grad-accent':  'linear-gradient(135deg,#4A5CFF 0%,#7B4FFF 100%)',
+                        'grad-surface': 'linear-gradient(160deg,#111435 0%,#0D1028 100%)',
+                        'grad-border':  'linear-gradient(135deg,rgba(150,80,255,0.8) 0%,rgba(74,92,255,0.4) 40%,rgba(30,20,80,0.1) 60%,rgba(200,130,30,0.4) 80%,rgba(255,180,40,0.7) 100%)',
+                    },
+                    boxShadow: {
+                        'glow-sm': '0 0 16px rgba(74,92,255,0.25)',
+                        'glow-md': '0 0 30px rgba(74,92,255,0.35)',
+                        'glow-lg': '0 0 50px rgba(74,92,255,0.45)',
+                    },
+                    borderRadius: {
+                        'ds-sm':'4px','ds-md':'8px','ds-lg':'16px','ds-xl':'24px'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* ── Design System CSS Variables ── */
+        :root {
+            --color-bg:             #090B1E;
+            --color-surface:        #0D1028;
+            --color-surface-2:      #111435;
+            --color-border:         #1A2448;
+            --color-border-bright:  rgba(74,92,255,0.5);
+            --color-accent:         #4A5CFF;
+            --color-accent-light:   #7B8FFF;
+            --color-text-primary:   #FFFFFF;
+            --color-text-secondary: #B0B8D0;
+            --color-text-muted:     #48527A;
+            --font-display:         'Inter', sans-serif;
+            --font-mono:            'JetBrains Mono', monospace;
+            --grad-accent:          linear-gradient(135deg,#4A5CFF 0%,#7B4FFF 100%);
+            --grad-surface:         linear-gradient(160deg,#111435 0%,#0D1028 100%);
+            --glow-purple:          rgba(120,80,255,0.7);
+            --glow-gold:            rgba(255,180,60,0.5);
+            --radius-sm:4px; --radius-md:8px; --radius-lg:16px; --radius-xl:24px;
+        }
+        *{box-sizing:border-box}
+        body{font-family:var(--font-display);margin:0;background:var(--color-bg);color:var(--color-text-primary);-webkit-font-smoothing:antialiased}
+        .fade-in{animation:fadeIn 0.25s ease-out}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+        .slide-in{animation:slideIn 0.3s ease-out}
+        @keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+        input,select,textarea{color-scheme:dark;font-family:var(--font-display)}
+        ::-webkit-scrollbar{width:6px;height:6px}
+        ::-webkit-scrollbar-track{background:var(--color-bg)}
+        ::-webkit-scrollbar-thumb{background:var(--color-border);border-radius:3px}
+        ::-webkit-scrollbar-thumb:hover{background:var(--color-accent)}
+        .sparkline-bar{transition:height 0.3s ease}
+        .tier-direct{background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3)}
+        .tier-indirect{background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.3)}
+        .tier-emerging{background:rgba(99,102,241,0.15);color:#a5b4fc;border:1px solid rgba(99,102,241,0.3)}
+        .signal-product{background:rgba(14,165,233,0.15);color:#38bdf8;border:1px solid rgba(14,165,233,0.3)}
+        .signal-business{background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.3)}
+        .signal-team{background:rgba(139,92,246,0.15);color:#c4b5fd;border:1px solid rgba(139,92,246,0.3)}
+        .signal-legal{background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3)}
+        .signal-marketing{background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.3)}
+        .signal-sentiment{background:rgba(236,72,153,0.15);color:#f9a8d4;border:1px solid rgba(236,72,153,0.3)}
+        .sev-critical{background:rgba(239,68,68,0.15);color:#f87171}
+        .sev-high{background:rgba(245,158,11,0.15);color:#fbbf24}
+        .sev-medium{background:rgba(99,102,241,0.15);color:#a5b4fc}
+        .sev-low{background:rgba(113,113,122,0.15);color:#a1a1aa}
+        .tab-active{border-bottom:2px solid var(--color-accent);color:var(--color-text-primary)}
+        .tab-inactive{border-bottom:2px solid transparent;color:var(--color-text-muted)}
+        .table-row-hover:hover{background:rgba(26,36,72,0.5)}
+        .changed-cell{background:rgba(74,92,255,0.1)!important;border-left:2px solid var(--color-accent)}
+        .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(4px);z-index:100;display:flex;align-items:center;justify-content:center}
+        .progress-bar{height:3px;background:var(--color-border);border-radius:2px;overflow:hidden}
+        .progress-fill{height:100%;background:var(--grad-accent);transition:width 1.2s ease}
+        .generating-dot{width:6px;height:6px;border-radius:50%;background:#0ea5e9;animation:pulse 1s ease-in-out infinite}
+        .generating-dot:nth-child(2){animation-delay:0.2s}
+        .generating-dot:nth-child(3){animation-delay:0.4s}
+        @keyframes pulse{0%,80%,100%{opacity:0.3;transform:scale(0.8)}40%{opacity:1;transform:scale(1)}}
+        .tooltip-wrap{position:relative}
+        .tooltip-wrap:hover .tooltip-text{display:block}
+        .tooltip-text{display:none;position:absolute;bottom:calc(100%+6px);left:50%;transform:translateX(-50%);background:#3f3f46;color:#fafafa;padding:4px 10px;border-radius:6px;font-size:11px;white-space:nowrap;z-index:50;pointer-events:none}
+        .map-dot{position:absolute;width:10px;height:10px;border-radius:50%;transform:translate(-50%,-50%);cursor:pointer;transition:transform 0.15s}
+        .map-dot:hover{transform:translate(-50%,-50%) scale(1.6)}
+        .drawer{position:fixed;right:0;top:0;height:100%;width:420px;background:var(--color-surface);border-left:1px solid var(--color-border);z-index:80;overflow-y:auto;transition:transform 0.3s ease}
+        .drawer-closed{transform:translateX(100%)}
+        .drawer-open{transform:translateX(0)}
+    </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useMemo, useCallback } = React;
+
+// ─── Mock Data ────────────────────────────────────────────────────────────────
+
+const MOCK_ANALYSIS = {
+    id: 'ca1',
+    name: 'B2B Sales Intelligence SaaS — Series A Prep',
+    market: 'B2B Sales Intelligence & Revenue Operations SaaS',
+    description: 'We\'re building an AI-powered sales intelligence platform that helps B2B revenue teams identify high-intent buyers, enrich contact data in real time, and surface competitive insights to reps before every call. We target mid-market and enterprise companies with 50–500 person sales teams.',
+    created: '2026-02-10',
+    lastPolled: '2026-03-06T06:00:00Z',
+    pollingEnabled: true,
+    pollingTime: '06:00',
+    spreadsheetVersion: 'v2.3',
+};
+
+const MOCK_COMPETITORS = [
+    { id:'c1', name:'Apollo.io', website:'apollo.io', tier:'direct', status:'active', stage:'Growth', employees:'1,200', funding:'$251M', lastRound:'Series D · $100M', lastRoundDate:'2023-08', pricingModel:'Freemium + Seats', hq:'San Francisco, CA', lastActivity:'2026-03-05', alertCount7d:3, logo:'A', color:'#6366f1', marketFocus:0.85, traction:0.9 },
+    { id:'c2', name:'ZoomInfo', website:'zoominfo.com', tier:'direct', status:'active', stage:'Public', employees:'3,800', funding:'$1.4B', lastRound:'IPO · NASDAQ:ZI', lastRoundDate:'2020-06', pricingModel:'Annual Contracts', hq:'Vancouver, WA', lastActivity:'2026-03-04', alertCount7d:5, logo:'Z', color:'#0ea5e9', marketFocus:0.9, traction:0.95 },
+    { id:'c3', name:'Gong', website:'gong.io', tier:'direct', status:'active', stage:'Late-Stage', employees:'1,500', funding:'$583M', lastRound:'Series E · $250M', lastRoundDate:'2021-06', pricingModel:'Per Seat + Usage', hq:'San Francisco, CA', lastActivity:'2026-03-03', alertCount7d:1, logo:'G', color:'#8b5cf6', marketFocus:0.7, traction:0.88 },
+    { id:'c4', name:'Outreach', website:'outreach.io', tier:'direct', status:'active', stage:'Late-Stage', employees:'1,100', funding:'$489M', lastRound:'Series G · $200M', lastRoundDate:'2021-06', pricingModel:'Per Seat', hq:'Seattle, WA', lastActivity:'2026-02-28', alertCount7d:2, logo:'O', color:'#10b981', marketFocus:0.65, traction:0.78 },
+    { id:'c5', name:'Salesforce Einstein', website:'salesforce.com', tier:'indirect', status:'active', stage:'Public', employees:'79,000', funding:'N/A', lastRound:'Public · NYSE:CRM', lastRoundDate:'—', pricingModel:'Platform Licensing', hq:'San Francisco, CA', lastActivity:'2026-03-01', alertCount7d:7, logo:'S', color:'#06b6d4', marketFocus:0.4, traction:0.99 },
+    { id:'c6', name:'Clari', website:'clari.com', tier:'indirect', status:'active', stage:'Late-Stage', employees:'600', funding:'$465M', lastRound:'Series F · $225M', lastRoundDate:'2022-01', pricingModel:'Per Seat', hq:'Sunnyvale, CA', lastActivity:'2026-02-20', alertCount7d:0, logo:'C', color:'#f59e0b', marketFocus:0.55, traction:0.72 },
+    { id:'c7', name:'Warmly.ai', website:'warmly.ai', tier:'emerging', status:'active', stage:'Seed', employees:'35', funding:'$6M', lastRound:'Seed · $6M', lastRoundDate:'2023-09', pricingModel:'Freemium', hq:'San Francisco, CA', lastActivity:'2026-03-02', alertCount7d:1, logo:'W', color:'#ec4899', marketFocus:0.8, traction:0.35 },
+    { id:'c8', name:'Clay', website:'clay.com', tier:'emerging', status:'active', stage:'Series B', employees:'90', funding:'$62M', lastRound:'Series B · $46M', lastRoundDate:'2024-02', pricingModel:'Credits + Seats', hq:'New York, NY', lastActivity:'2026-03-04', alertCount7d:4, logo:'C', color:'#f97316', marketFocus:0.75, traction:0.58 },
+];
+
+const MOCK_SIGNALS = [
+    { id:'sig1', competitorId:'c1', type:'business', severity:'high', summary:'Apollo.io raised a $100M Series D at a $1.6B valuation, led by Sequoia. The round will fund international expansion into EMEA and an AI research team buildout.', date:'2026-03-05', source:'TechCrunch' },
+    { id:'sig2', competitorId:'c2', type:'team', severity:'high', summary:'ZoomInfo announced that CFO Graham Ratcliff will depart at the end of Q1. This is the third C-suite exit in 12 months, raising questions about internal stability.', date:'2026-03-04', source:'Business Insider' },
+    { id:'sig3', competitorId:'c2', type:'product', severity:'medium', summary:'ZoomInfo launched Copilot, an AI assistant for sales reps that surfaces talking points and objection handling. Positioned as a direct response to Gong\'s AI coaching feature.', date:'2026-03-03', source:'PR Newswire' },
+    { id:'sig4', competitorId:'c8', type:'product', severity:'medium', summary:'Clay released a native LinkedIn enrichment integration, removing the need for third-party workarounds. Users on social media are calling it "the feature they\'ve been waiting for."', date:'2026-03-04', source:'Product Hunt' },
+    { id:'sig5', competitorId:'c5', type:'business', severity:'medium', summary:'Salesforce announced Einstein AI for Sales is now included in all Sales Cloud Professional licenses at no additional cost. This could compress pricing power for standalone point solutions.', date:'2026-03-01', source:'Salesforce Blog' },
+    { id:'sig6', competitorId:'c2', type:'legal', severity:'high', summary:'ZoomInfo faces a class action lawsuit in California over alleged CCPA violations related to data collection practices. This is the second privacy-related legal action in 18 months.', date:'2026-02-28', source:'Reuters' },
+    { id:'sig7', competitorId:'c3', type:'team', severity:'low', summary:'Gong hired Erica Jordan as VP of Enterprise Sales, formerly of Salesforce. The hire signals continued focus on enterprise motion.', date:'2026-03-03', source:'LinkedIn' },
+    { id:'sig8', competitorId:'c8', type:'business', severity:'medium', summary:'Clay was cited in 14 separate "tech stack" threads on LinkedIn this week, up from an average of 3 per week. Organic word-of-mouth continues to accelerate.', date:'2026-03-02', source:'LinkedIn' },
+    { id:'sig9', competitorId:'c4', type:'marketing', severity:'low', summary:'Outreach rebranded its product suite under the "Outreach Revenue AI" name and updated pricing tiers. Existing customers report no pricing changes.', date:'2026-02-28', source:'Outreach Blog' },
+    { id:'sig10', competitorId:'c1', type:'product', severity:'medium', summary:'Apollo launched Apollo AI Conversations, a call recording and analysis product directly competing with Gong and Chorus. The feature is included in existing paid tiers.', date:'2026-02-25', source:'Apollo Blog' },
+];
+
+const MOCK_COMPETITOR_PROFILES = {
+    c1: {
+        overview: { founded:'2015', hq:'San Francisco, CA', stage:'Growth', employees:'~1,200', website:'apollo.io', description:'Apollo.io is an all-in-one sales intelligence and engagement platform with a database of 275M+ contacts and 73M+ companies. It combines prospecting, enrichment, sequencing, and analytics in a single tool.' },
+        market: { primaryMarket:'B2B Sales Intelligence', segment:'SMB to Mid-Market', valueProposition:'All-in-one prospecting and engagement at freemium price point', tier:'direct' },
+        product: { features:['Contact & company database (275M+ contacts)','Email sequencing & automation','AI-powered call recording (new)','Intent signals','CRM enrichment','Chrome extension'], pricing:'Free tier available. Paid plans from $49/user/mo. Annual discount ~20%.' },
+        funding: { total:'$251M', lastRound:'Series D · $100M · Aug 2023', investors:'Sequoia, Tribe Capital, Nexus Venture Partners', revenueSignals:'Claimed $100M ARR milestone in 2024' },
+        team: { ceo:'Tim Zheng (Co-founder)', keyExecs:'Roy Chung (CTO), Bridget Gleason (CRO)', recentMoves:'Hired 3 senior PMs from Salesforce in Q4 2025' },
+        gtm: { channels:'Product-led growth, content SEO, G2 reviews', partnerships:'Salesforce, HubSpot, Outreach native integrations', integrations:'150+ CRM and sales tool integrations' },
+        recentMoves: ['Mar 2026: Raised $100M Series D at $1.6B valuation', 'Feb 2026: Launched Apollo AI Conversations (call recording)', 'Jan 2026: Hit 1.5M registered users milestone', 'Dec 2025: Partnership with Salesloft announced'],
+        riskSignals: ['Freemium model creates pressure to convert free users; churn risk if value not demonstrated quickly', 'Expanding into adjacent markets (call recording) stretches product focus', 'Data quality complaints persist on G2/Trustpilot — avg 3.8/5'],
+    },
+    c2: {
+        overview: { founded:'2000', hq:'Vancouver, WA', stage:'Public (NASDAQ:ZI)', employees:'~3,800', website:'zoominfo.com', description:'ZoomInfo is the market leader in B2B contact and company data, offering intent signals, sales automation, and marketing intelligence. Listed on NASDAQ since 2020.' },
+        market: { primaryMarket:'B2B Sales & Marketing Intelligence', segment:'Mid-Market to Enterprise', valueProposition:'Most comprehensive B2B database with deep intent signal coverage', tier:'direct' },
+        product: { features:['B2B contact database (265M+ contacts)','Intent signals (Bombora partnership)','Conversation intelligence (Chorus.ai)','Marketing automation (MarketingOS)','Talent intelligence (TalentOS)','ZoomInfo Copilot (AI assistant, new)'], pricing:'Annual contracts starting ~$15,000/year for teams. Per-seat and credit-based models.' },
+        funding: { total:'$1.4B pre-IPO', lastRound:'IPO · June 2020 · $935M raised', investors:'Public company', revenueSignals:'$1.1B revenue in 2024 (reported), but growth has slowed to ~5% YoY' },
+        team: { ceo:'Henry Schuck (Co-founder & CEO)', keyExecs:'CFO departing Q1 2026 — replacement search ongoing', recentMoves:'3 C-suite exits in 12 months raises stability concerns' },
+        gtm: { channels:'Enterprise direct sales, partner resellers, annual contracts', partnerships:'Salesforce, Microsoft Dynamics, HubSpot, SAP', integrations:'200+ integrations' },
+        recentMoves: ['Mar 2026: CFO departure announced', 'Mar 2026: ZoomInfo Copilot AI assistant launched', 'Feb 2026: Class action lawsuit filed (CCPA violations)', 'Jan 2026: Announced 8% workforce reduction'],
+        riskSignals: ['Class action CCPA lawsuit could result in significant fines and reputational damage', 'Revenue growth has decelerated from 50%+ in 2021 to ~5% in 2024', 'Multiple C-suite departures signal potential internal instability', 'Pricing perceived as high by SMB market — leaving door open for competitors'],
+    },
+    c8: {
+        overview: { founded:'2022', hq:'New York, NY', stage:'Series B', employees:'~90', website:'clay.com', description:'Clay is a next-generation data enrichment and outbound automation platform that aggregates 75+ data providers through a waterfall enrichment model. Popular with growth teams and technical sales operators.' },
+        market: { primaryMarket:'B2B Data Enrichment & Outbound Automation', segment:'SMB to Mid-Market, technical users', valueProposition:'Access 75+ data sources in one workflow without managing multiple subscriptions', tier:'emerging' },
+        product: { features:['Waterfall enrichment (75+ providers)','AI research agent (Claygent)','Native LinkedIn integration (new)','Outbound sequencing','CRM sync','API-first architecture'], pricing:'Credit-based. Free tier (100 credits/mo). Paid from $149/mo. Enterprise custom.' },
+        funding: { total:'$62M', lastRound:'Series B · $46M · Feb 2024', investors:'Meritech Capital, BoxGroup, angels', revenueSignals:'Estimated $20-30M ARR based on team size and growth signals' },
+        team: { ceo:'Kareem Amin (Co-founder & CEO)', keyExecs:'Small, lean team', recentMoves:'Actively hiring senior engineers and GTM roles' },
+        gtm: { channels:'Product-led, community-driven, Twitter/LinkedIn organic', partnerships:'75+ data providers', integrations:'Native Salesforce, HubSpot, Airtable, Notion, Slack' },
+        recentMoves: ['Mar 2026: LinkedIn native integration released', 'Mar 2026: Heavy organic social momentum (14x LinkedIn mentions WoW)', 'Feb 2026: Clay raised Series B at $46M', 'Jan 2026: Claygent (AI research) feature launched'],
+        riskSignals: ['Heavy reliance on credit-based model can lead to unpredictable customer spending', 'Technical product may limit TAM — non-technical users cite steep learning curve', 'Rapid growth straining support capacity; public complaints about response times'],
+    },
+};
+
+const MOCK_SPREADSHEET_VERSIONS = [
+    { label:'v2.3', date:'2026-03-06', changes:['Apollo.io funding updated ($251M)', 'ZoomInfo alertCount +2', 'Clay alertCount +4'], changedCols:{ c1:['funding','lastRound','alertCount7d'], c2:['alertCount7d'], c8:['alertCount7d','lastActivity'] } },
+    { label:'v2.2', date:'2026-03-04', changes:['ZoomInfo lastActivity updated', 'Clay website corrected'], changedCols:{ c2:['lastActivity'], c8:['website'] } },
+    { label:'v2.1', date:'2026-03-01', changes:['Salesforce alertCount updated', 'Clari lastActivity updated'], changedCols:{ c5:['alertCount7d'], c6:['lastActivity'] } },
+    { label:'v2.0', date:'2026-02-28', changes:['Clay added to tracker (new competitor)', 'Warmly.ai added to tracker'], changedCols:{ c7:['all'], c8:['all'] } },
+    { label:'v1.3', date:'2026-02-20', changes:['ZoomInfo lawsuit flag added', 'Gong employees updated'], changedCols:{ c2:['status'], c3:['employees'] } },
+    { label:'v1.2', date:'2026-02-14', changes:['Apollo stage updated', 'Multiple pricing model corrections'], changedCols:{ c1:['stage','pricingModel'], c4:['pricingModel'] } },
+    { label:'v1.1', date:'2026-02-12', changes:['Outreach HQ corrected', 'Salesforce employees updated'], changedCols:{ c4:['hq'], c5:['employees'] } },
+    { label:'v1.0', date:'2026-02-10', changes:['Initial spreadsheet created'], changedCols:{} },
+];
+
+const MOCK_ALERTS = [
+    { id:'al1', competitorId:'c1', signalId:'sig1', severity:'high', body:'Apollo.io closed a $100M Series D at a $1.6B valuation, led by Sequoia. Expect accelerated EMEA expansion and AI feature buildout over the next 12 months.', date:'2026-03-05T08:14:00Z', read:false },
+    { id:'al2', competitorId:'c2', signalId:'sig2', severity:'high', body:'ZoomInfo CFO Graham Ratcliff is departing at end of Q1. This is the third C-suite exit in 12 months and may signal continued instability at the leadership level.', date:'2026-03-04T11:30:00Z', read:false },
+    { id:'al3', competitorId:'c8', signalId:'sig4', severity:'medium', body:'Clay released native LinkedIn enrichment, removing a key workflow friction point. Social sentiment is very positive — monitor for acceleration in user growth.', date:'2026-03-04T09:45:00Z', read:false },
+    { id:'al4', competitorId:'c2', signalId:'sig3', severity:'medium', body:'ZoomInfo launched Copilot, an AI sales assistant that directly competes with Gong\'s coaching features. This broadens ZoomInfo\'s product surface significantly.', date:'2026-03-03T14:20:00Z', read:true },
+    { id:'al5', competitorId:'c5', signalId:'sig5', severity:'medium', body:'Salesforce is including Einstein AI for Sales in all Sales Cloud Professional licenses. This compresses pricing pressure on point-solution competitors including Apollo and Clay.', date:'2026-03-01T07:55:00Z', read:true },
+    { id:'al6', competitorId:'c2', signalId:'sig6', severity:'high', body:'ZoomInfo faces a new CCPA class action lawsuit. Second privacy action in 18 months — this could lead to significant fines and enterprise procurement friction.', date:'2026-02-28T16:10:00Z', read:true },
+];
+
+const MOCK_WEEKLY_REPORT = {
+    weekOf: 'March 3–9, 2026',
+    generatedAt: '2026-03-06T07:00:00Z',
+    marketPulse: 'The B2B sales intelligence market entered March with significant activity across funding, product launches, and leadership changes. Apollo\'s Series D signals continued investor confidence in the segment, while ZoomInfo\'s leadership instability and legal exposure create a potential opening for challengers. Clay\'s momentum continues to accelerate organically, suggesting the "technical buyer" segment is expanding faster than the enterprise tier.',
+    topStories: [
+        { title:'Apollo.io closes $100M Series D', summary:'Apollo\'s funding round at a $1.6B valuation is the largest in the segment since Gong\'s Series E in 2021. Sequoia leading indicates strong conviction in Apollo\'s all-in-one model. Watch for EMEA expansion announcements in Q2 and potential enterprise sales team buildout.', type:'business', competitor:'Apollo.io', severity:'high' },
+        { title:'ZoomInfo faces third C-suite departure and CCPA lawsuit', summary:'CFO departure following two other executive exits in 12 months, combined with a class action lawsuit, represents meaningful execution risk for ZoomInfo. Enterprise procurement teams may pause renewals pending legal clarity. This creates a real window for competitors to target ZoomInfo accounts.', type:'team', competitor:'ZoomInfo', severity:'high' },
+        { title:'Clay\'s LinkedIn integration triggers viral adoption wave', summary:'The native LinkedIn integration resolved a top user request and immediately triggered a wave of social media endorsements. 14x increase in organic LinkedIn mentions week-over-week is an early signal of accelerating word-of-mouth growth. Clay appears to be winning the "technical operator" buyer that other platforms have underserved.', type:'product', competitor:'Clay', severity:'medium' },
+    ],
+    competitorMoves: [
+        { competitor:'Apollo.io', moves:['$100M Series D raised', 'AI Conversations call recording launched'] },
+        { competitor:'ZoomInfo', moves:['CFO departure announced', 'Copilot AI assistant launched', 'CCPA class action filed'] },
+        { competitor:'Clay', moves:['LinkedIn native integration shipped', 'Series B momentum continues'] },
+        { competitor:'Salesforce Einstein', moves:['Einstein AI included in all Pro licenses — pricing move'] },
+        { competitor:'Outreach', moves:['Rebranded to Outreach Revenue AI'] },
+    ],
+    fundingMA: ['Apollo.io: $100M Series D (Sequoia) — $1.6B valuation'],
+    signalsToWatch: [
+        'ZoomInfo CFO search: The incoming hire\'s background will signal whether ZoomInfo pivots toward a cost-discipline or growth story.',
+        'Clay enterprise motion: Clay has been SMB/mid-market; first signs of an enterprise sales team would indicate a market expansion play.',
+        'Apollo call recording adoption: If Apollo\'s AI Conversations reaches meaningful usage, Gong\'s mid-market flank is exposed.',
+    ],
+    alertSummary: { total:6, critical:0, high:3, medium:2, low:1 },
+};
+
+// ─── Utility Components ───────────────────────────────────────────────────────
+
+const TierBadge = ({ tier }) => {
+    const cls = tier === 'direct' ? 'tier-direct' : tier === 'indirect' ? 'tier-indirect' : 'tier-emerging';
+    return <span className={`${cls} text-xs px-2 py-0.5 rounded-full font-medium`}>{tier.charAt(0).toUpperCase()+tier.slice(1)}</span>;
+};
+
+const SignalBadge = ({ type }) => {
+    const cls = `signal-${type}`;
+    return <span className={`${cls} text-xs px-2 py-0.5 rounded-full font-medium`}>{type.charAt(0).toUpperCase()+type.slice(1)}</span>;
+};
+
+const SeverityBadge = ({ severity }) => {
+    const cls = `sev-${severity}`;
+    return <span className={`${cls} text-xs px-2 py-0.5 rounded-md font-medium`}>{severity.charAt(0).toUpperCase()+severity.slice(1)}</span>;
+};
+
+const CompetitorAvatar = ({ competitor, size = 'md' }) => {
+    const sz = size === 'sm' ? 'w-6 h-6 text-xs' : size === 'lg' ? 'w-10 h-10 text-base' : 'w-8 h-8 text-sm';
+    return (
+        <div className={`${sz} rounded-lg flex items-center justify-center font-bold flex-shrink-0`}
+             style={{ background: competitor.color + '25', color: competitor.color, border: `1px solid ${competitor.color}40` }}>
+            {competitor.logo}
+        </div>
+    );
+};
+
+const Sparkline = ({ data, color = '#0ea5e9' }) => {
+    const max = Math.max(...data, 1);
+    return (
+        <div className="flex items-end gap-px h-6">
+            {data.map((v, i) => (
+                <div key={i} className="sparkline-bar w-1.5 rounded-sm"
+                     style={{ height: `${Math.max((v/max)*100, 8)}%`, background: color + (i === data.length-1 ? 'ff' : '60') }} />
+            ))}
+        </div>
+    );
+};
+
+const StatCard = ({ label, value, sub, color = '#0ea5e9', icon }) => (
+    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex flex-col gap-1">
+        <div className="flex items-center gap-2 text-zinc-500 text-xs">{icon && <span>{icon}</span>}{label}</div>
+        <div className="text-2xl font-bold" style={{ color }}>{value}</div>
+        {sub && <div className="text-zinc-500 text-xs">{sub}</div>}
+    </div>
+);
+
+// ─── Views ────────────────────────────────────────────────────────────────────
+
+// Step 1: Idea Input
+const IdeaInput = ({ onComplete }) => {
+    const [description, setDescription] = useState('');
+    const [geo, setGeo] = useState('');
+    const [stage, setStage] = useState('');
+    const [industry, setIndustry] = useState('');
+    const [generating, setGenerating] = useState(false);
+    const [progress, setProgress] = useState(0);
+    const [step, setStep] = useState('');
+
+    const steps = [
+        'Parsing your description…',
+        'Classifying market segment…',
+        'Searching funding databases…',
+        'Scanning product directories…',
+        'Identifying competitors…',
+        'Assigning tiers and scores…',
+        'Preparing confirmation…',
+    ];
+
+    const handleGenerate = () => {
+        if (!description.trim()) return;
+        setGenerating(true);
+        let i = 0;
+        const interval = setInterval(() => {
+            setStep(steps[i]);
+            setProgress(Math.round(((i+1)/steps.length)*100));
+            i++;
+            if (i >= steps.length) {
+                clearInterval(interval);
+                setTimeout(() => onComplete(), 600);
+            }
+        }, 500);
+    };
+
+    if (generating) {
+        return (
+            <div className="flex-1 flex items-center justify-center fade-in">
+                <div className="max-w-md w-full text-center space-y-6 px-4">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                        <div className="generating-dot" />
+                        <div className="generating-dot" />
+                        <div className="generating-dot" />
+                    </div>
+                    <h2 className="text-xl font-semibold text-zinc-100">Analyzing your market</h2>
+                    <p className="text-zinc-400 text-sm">{step}</p>
+                    <div className="progress-bar">
+                        <div className="progress-fill" style={{ width: `${progress}%` }} />
+                    </div>
+                    <p className="text-zinc-600 text-xs">{progress}% complete</p>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="flex-1 flex items-center justify-center px-4 fade-in">
+            <div className="max-w-2xl w-full space-y-6">
+                <div>
+                    <h1 className="text-2xl font-bold text-zinc-100 mb-1">New Competitive Analysis</h1>
+                    <p className="text-zinc-400 text-sm">Describe your idea or the market you're entering. Trava will identify competitors, classify the market, and generate intelligence reports automatically.</p>
+                </div>
+
+                <div className="space-y-4">
+                    <div>
+                        <label className="block text-xs text-zinc-400 mb-1.5 font-medium">Describe your idea, product, or market <span className="text-zinc-600">(2–5 sentences)</span></label>
+                        <textarea
+                            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-sky-600 resize-none"
+                            rows={4}
+                            placeholder="e.g. We're building an AI-powered sales intelligence platform that helps B2B revenue teams identify high-intent buyers, enrich contact data in real time, and surface competitive insights before every call. We target mid-market companies with 50–500 person sales teams."
+                            value={description}
+                            onChange={e => setDescription(e.target.value)}
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-3">
+                        <div>
+                            <label className="block text-xs text-zinc-400 mb-1.5">Geography <span className="text-zinc-600">(optional)</span></label>
+                            <input className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-sky-600"
+                                   placeholder="e.g. North America" value={geo} onChange={e=>setGeo(e.target.value)} />
+                        </div>
+                        <div>
+                            <label className="block text-xs text-zinc-400 mb-1.5">Company Stage <span className="text-zinc-600">(optional)</span></label>
+                            <select className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-sky-600"
+                                    value={stage} onChange={e=>setStage(e.target.value)}>
+                                <option value="">Select…</option>
+                                <option>Early-stage</option>
+                                <option>Growth</option>
+                                <option>Enterprise</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-xs text-zinc-400 mb-1.5">Industry Tag <span className="text-zinc-600">(optional)</span></label>
+                            <input className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-sky-600"
+                                   placeholder="e.g. SaaS, Fintech" value={industry} onChange={e=>setIndustry(e.target.value)} />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-2">
+                    <p className="text-xs text-zinc-600">Trava will identify 5–15 competitors and generate a full profile for each.</p>
+                    <button
+                        onClick={handleGenerate}
+                        disabled={!description.trim()}
+                        className="px-5 py-2.5 bg-sky-600 hover:bg-sky-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white text-sm font-medium rounded-lg transition-colors">
+                        Analyze Market →
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// Step 2: Confirmation Screen
+const ConfirmationScreen = ({ onConfirm }) => {
+    const [competitors, setCompetitors] = useState(MOCK_COMPETITORS);
+    const [marketName, setMarketName] = useState(MOCK_ANALYSIS.market);
+    const [editingMarket, setEditingMarket] = useState(false);
+    const [generating, setGenerating] = useState(false);
+    const [progress, setProgress] = useState(0);
+    const [genStep, setGenStep] = useState('');
+
+    const genSteps = ['Generating Apollo.io profile…','Generating ZoomInfo profile…','Generating Gong profile…','Generating Outreach profile…','Generating Salesforce Einstein profile…','Generating Clari profile…','Generating Warmly.ai profile…','Generating Clay profile…','Building spreadsheet v1.0…','Activating market dashboard…','Setting up daily monitoring…'];
+
+    const setTier = (id, tier) => setCompetitors(prev => prev.map(c => c.id === id ? {...c, tier} : c));
+    const remove = (id) => setCompetitors(prev => prev.filter(c => c.id !== id));
+
+    const handleConfirm = () => {
+        setGenerating(true);
+        let i = 0;
+        const interval = setInterval(() => {
+            setGenStep(genSteps[i]);
+            setProgress(Math.round(((i+1)/genSteps.length)*100));
+            i++;
+            if (i >= genSteps.length) {
+                clearInterval(interval);
+                setTimeout(() => onConfirm(), 600);
+            }
+        }, 400);
+    };
+
+    if (generating) {
+        return (
+            <div className="flex-1 flex items-center justify-center fade-in">
+                <div className="max-w-md w-full text-center space-y-6 px-4">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                        <div className="generating-dot" />
+                        <div className="generating-dot" />
+                        <div className="generating-dot" />
+                    </div>
+                    <h2 className="text-xl font-semibold text-zinc-100">Generating reports</h2>
+                    <p className="text-zinc-400 text-sm">{genStep}</p>
+                    <div className="progress-bar"><div className="progress-fill" style={{ width:`${progress}%` }} /></div>
+                    <p className="text-zinc-600 text-xs">{progress}% complete</p>
+                </div>
+            </div>
+        );
+    }
+
+    const tiers = ['direct','indirect','emerging'];
+    return (
+        <div className="flex-1 overflow-y-auto fade-in">
+            <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
+                <div>
+                    <div className="flex items-center gap-2 mb-1">
+                        <button className="text-zinc-500 hover:text-zinc-300 text-xs">← Back</button>
+                    </div>
+                    <h1 className="text-xl font-bold text-zinc-100 mb-1">Confirm your competitive landscape</h1>
+                    <p className="text-zinc-400 text-sm">Review the market classification and competitor list. Add, remove, or change tiers before generating full profiles.</p>
+                </div>
+
+                {/* Market classification */}
+                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-2">
+                    <div className="text-xs text-zinc-500 font-medium uppercase tracking-wider">Market Classification</div>
+                    {editingMarket ? (
+                        <div className="flex gap-2">
+                            <input className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-zinc-100 focus:outline-none focus:border-sky-600"
+                                   value={marketName} onChange={e=>setMarketName(e.target.value)} autoFocus />
+                            <button onClick={()=>setEditingMarket(false)} className="px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white text-xs rounded-lg">Save</button>
+                        </div>
+                    ) : (
+                        <div className="flex items-center justify-between">
+                            <span className="text-zinc-100 font-medium">{marketName}</span>
+                            <button onClick={()=>setEditingMarket(true)} className="text-xs text-zinc-500 hover:text-zinc-300">Edit</button>
+                        </div>
+                    )}
+                </div>
+
+                {/* Tier legend */}
+                <div className="flex gap-4 text-xs text-zinc-400">
+                    <span className="flex items-center gap-1.5"><span className="tier-direct px-1.5 py-0.5 rounded text-xs">Direct</span> Competing for the same buyer</span>
+                    <span className="flex items-center gap-1.5"><span className="tier-indirect px-1.5 py-0.5 rounded text-xs">Indirect</span> Adjacent solution, overlapping buyer</span>
+                    <span className="flex items-center gap-1.5"><span className="tier-emerging px-1.5 py-0.5 rounded text-xs">Emerging</span> Early-stage, watch list</span>
+                </div>
+
+                {/* Competitor list */}
+                <div className="space-y-2">
+                    {tiers.map(tier => {
+                        const group = competitors.filter(c=>c.tier===tier);
+                        if (!group.length) return null;
+                        return (
+                            <div key={tier}>
+                                <div className="text-xs text-zinc-600 uppercase tracking-wider mb-1.5 font-medium">{tier} — {group.length}</div>
+                                {group.map(c => (
+                                    <div key={c.id} className="bg-zinc-900 border border-zinc-800 rounded-xl p-3 flex items-center gap-3 mb-1.5">
+                                        <CompetitorAvatar competitor={c} />
+                                        <div className="flex-1 min-w-0">
+                                            <div className="font-medium text-zinc-100 text-sm">{c.name}</div>
+                                            <div className="text-zinc-500 text-xs">{c.website} · {c.stage} · {c.hq}</div>
+                                        </div>
+                                        <select className="bg-zinc-800 border border-zinc-700 rounded-lg px-2 py-1 text-xs text-zinc-300 focus:outline-none focus:border-sky-600"
+                                                value={c.tier} onChange={e=>setTier(c.id, e.target.value)}>
+                                            <option value="direct">Direct</option>
+                                            <option value="indirect">Indirect</option>
+                                            <option value="emerging">Emerging</option>
+                                        </select>
+                                        <button onClick={()=>remove(c.id)} className="text-zinc-600 hover:text-red-400 text-xs px-2">✕</button>
+                                    </div>
+                                ))}
+                            </div>
+                        );
+                    })}
+                </div>
+
+                {/* Add competitor row */}
+                <button className="w-full border border-dashed border-zinc-700 hover:border-zinc-500 rounded-xl p-3 text-zinc-500 hover:text-zinc-300 text-sm transition-colors">
+                    + Add competitor manually
+                </button>
+
+                <div className="flex items-center justify-between pt-2 border-t border-zinc-800">
+                    <span className="text-zinc-500 text-sm">{competitors.length} competitors · {competitors.filter(c=>c.tier==='direct').length} direct · {competitors.filter(c=>c.tier==='indirect').length} indirect · {competitors.filter(c=>c.tier==='emerging').length} emerging</span>
+                    <button onClick={handleConfirm}
+                            className="px-5 py-2.5 bg-sky-600 hover:bg-sky-500 text-white text-sm font-medium rounded-lg transition-colors">
+                        Generate Reports →
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// ─── Market Dashboard ─────────────────────────────────────────────────────────
+const MarketDashboard = ({ onNavigate }) => {
+    const [dateRange, setDateRange] = useState('7d');
+    const [filterTier, setFilterTier] = useState('all');
+    const [lastRefreshed, setLastRefreshed] = useState('Today 6:00 AM');
+    const [refreshing, setRefreshing] = useState(false);
+
+    const sparklineData = {
+        c1: [1,2,1,3,2,4,3], c2: [3,4,2,5,3,6,5],
+        c3: [1,1,2,1,2,1,1], c4: [0,1,2,1,2,2,2],
+        c5: [2,3,4,3,5,4,7], c6: [0,0,1,0,0,0,0],
+        c7: [0,1,0,1,1,1,1], c8: [1,2,3,3,4,4,4],
+    };
+
+    const filteredCompetitors = filterTier === 'all' ? MOCK_COMPETITORS : MOCK_COMPETITORS.filter(c=>c.tier===filterTier);
+    const recentSignals = MOCK_SIGNALS.slice(0,6);
+
+    const handleRefresh = () => {
+        setRefreshing(true);
+        setTimeout(() => { setRefreshing(false); setLastRefreshed('Just now'); }, 1800);
+    };
+
+    const totalAlerts = MOCK_ALERTS.filter(a=>!a.read).length;
+    const totalFunding = '$1.79B tracked';
+    const momentumScore = 74;
+
+    return (
+        <div className="flex-1 overflow-y-auto fade-in">
+            <div className="px-6 py-5 space-y-5">
+                {/* Header */}
+                <div className="flex items-start justify-between">
+                    <div>
+                        <div className="flex items-center gap-2 text-xs text-zinc-500 mb-1">
+                            <span>Competitive Analysis</span><span>›</span><span className="text-zinc-300">Market Dashboard</span>
+                        </div>
+                        <h1 className="text-xl font-bold text-zinc-100">{MOCK_ANALYSIS.market}</h1>
+                        <p className="text-zinc-500 text-sm mt-0.5">Last polled <span className="text-zinc-300">{lastRefreshed}</span> · {MOCK_COMPETITORS.length} competitors tracked · Spreadsheet {MOCK_ANALYSIS.spreadsheetVersion}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <select className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-xs text-zinc-300 focus:outline-none"
+                                value={filterTier} onChange={e=>setFilterTier(e.target.value)}>
+                            <option value="all">All tiers</option>
+                            <option value="direct">Direct only</option>
+                            <option value="indirect">Indirect</option>
+                            <option value="emerging">Emerging</option>
+                        </select>
+                        <select className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-xs text-zinc-300 focus:outline-none"
+                                value={dateRange} onChange={e=>setDateRange(e.target.value)}>
+                            <option value="7d">Last 7 days</option>
+                            <option value="30d">Last 30 days</option>
+                            <option value="90d">Last 90 days</option>
+                        </select>
+                        <button onClick={handleRefresh}
+                                className={`px-3 py-1.5 border border-zinc-700 rounded-lg text-xs text-zinc-300 hover:border-sky-700 hover:text-sky-400 transition-colors ${refreshing?'opacity-50':''}`}>
+                            {refreshing ? '⟳ Refreshing…' : '⟳ Refresh'}
+                        </button>
+                    </div>
+                </div>
+
+                {/* Top stat cards */}
+                <div className="grid grid-cols-4 gap-3">
+                    <StatCard label="Competitors" value={MOCK_COMPETITORS.length} sub="5 direct · 2 indirect · 2 emerging" color="#0ea5e9" icon="⬡" />
+                    <StatCard label="Unread Alerts" value={totalAlerts} sub="3 high severity" color="#f87171" icon="🔔" />
+                    <StatCard label="Market Momentum" value={`${momentumScore}/100`} sub="High activity week" color="#34d399" icon="⚡" />
+                    <StatCard label="Signals (7d)" value={MOCK_SIGNALS.length} sub="3 high · 5 medium · 2 low" color="#a5b4fc" icon="📡" />
+                </div>
+
+                {/* Main grid */}
+                <div className="grid grid-cols-3 gap-4">
+                    {/* Activity feed */}
+                    <div className="col-span-1 bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                            <div className="text-sm font-medium text-zinc-100">Activity Feed</div>
+                            <span className="text-xs text-zinc-500">Last 7 days</span>
+                        </div>
+                        <div className="space-y-3">
+                            {recentSignals.map(sig => {
+                                const comp = MOCK_COMPETITORS.find(c=>c.id===sig.competitorId);
+                                if (!comp) return null;
+                                return (
+                                    <div key={sig.id} className="flex gap-2.5">
+                                        <CompetitorAvatar competitor={comp} size="sm" />
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
+                                                <span className="text-xs font-medium text-zinc-200">{comp.name}</span>
+                                                <SignalBadge type={sig.type} />
+                                            </div>
+                                            <p className="text-xs text-zinc-400 leading-relaxed line-clamp-2">{sig.summary}</p>
+                                            <div className="text-xs text-zinc-600 mt-0.5">{sig.date} · {sig.source}</div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        <button className="text-xs text-sky-500 hover:text-sky-400">View all signals →</button>
+                    </div>
+
+                    {/* Competitor map */}
+                    <div className="col-span-2 bg-zinc-900 border border-zinc-800 rounded-xl p-4">
+                        <div className="flex items-center justify-between mb-3">
+                            <div className="text-sm font-medium text-zinc-100">Competitor Map</div>
+                            <div className="flex gap-3 text-xs text-zinc-500">
+                                <span>X: Market Focus</span><span>Y: Traction / Scale</span>
+                            </div>
+                        </div>
+                        <div className="relative bg-zinc-950 rounded-lg border border-zinc-800" style={{height:220}}>
+                            {/* Axis labels */}
+                            <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-xs text-zinc-600">Market Focus →</div>
+                            <div className="absolute left-2 top-1/2 transform -translate-y-1/2 -rotate-90 text-xs text-zinc-600">Traction →</div>
+                            {/* Quadrant lines */}
+                            <div className="absolute inset-0" style={{background:'linear-gradient(to right, transparent 49.5%, #27272a 49.5%, #27272a 50.5%, transparent 50.5%), linear-gradient(to bottom, transparent 49.5%, #27272a 49.5%, #27272a 50.5%, transparent 50.5%)'}} />
+                            {/* Dots */}
+                            {filteredCompetitors.map(c => (
+                                <div key={c.id} className="map-dot tooltip-wrap"
+                                     style={{ left:`${c.marketFocus*85+7}%`, bottom:`${c.traction*75+7}%`, background:c.color, boxShadow:`0 0 0 3px ${c.color}30` }}>
+                                    <div className="tooltip-text">{c.name} ({c.tier})</div>
+                                </div>
+                            ))}
+                        </div>
+                        {/* Legend */}
+                        <div className="flex flex-wrap gap-2 mt-2">
+                            {filteredCompetitors.map(c => (
+                                <div key={c.id} className="flex items-center gap-1 text-xs text-zinc-400">
+                                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{background:c.color}} />
+                                    {c.name}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Alert volume + funding */}
+                <div className="grid grid-cols-2 gap-4">
+                    {/* Alert volume sparklines */}
+                    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
+                        <div className="text-sm font-medium text-zinc-100">Alert Volume — 7 Days</div>
+                        {filteredCompetitors.map(c => (
+                            <div key={c.id} className="flex items-center gap-3">
+                                <CompetitorAvatar competitor={c} size="sm" />
+                                <span className="text-xs text-zinc-300 w-28 truncate">{c.name}</span>
+                                <div className="flex-1"><Sparkline data={sparklineData[c.id]||[0,0,0,0,0,0,0]} color={c.color} /></div>
+                                <span className="text-xs text-zinc-500 w-8 text-right">{c.alertCount7d}</span>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Funding tracker */}
+                    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
+                        <div className="text-sm font-medium text-zinc-100">Funding Tracker</div>
+                        {filteredCompetitors.filter(c=>c.funding && c.funding!=='N/A').map(c => {
+                            const num = parseFloat((c.funding||'0').replace(/[$,M,B]/g,''));
+                            const unit = (c.funding||'').includes('B') ? 1000 : 1;
+                            const val = num * unit;
+                            const maxVal = 1400;
+                            const pct = Math.min((val/maxVal)*100, 100);
+                            const recent = c.lastRoundDate > '2023-01';
+                            return (
+                                <div key={c.id} className="space-y-1">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <CompetitorAvatar competitor={c} size="sm" />
+                                            <span className="text-xs text-zinc-300">{c.name}</span>
+                                            {recent && <span className="text-xs text-sky-400 bg-sky-900/30 px-1.5 py-0.5 rounded">Recent</span>}
+                                        </div>
+                                        <span className="text-xs text-zinc-400">{c.funding}</span>
+                                    </div>
+                                    <div className="progress-bar">
+                                        <div className="progress-fill" style={{width:`${pct}%`, background: c.color+'aa'}} />
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Sentiment + recent reports */}
+                <div className="grid grid-cols-2 gap-4">
+                    {/* Sentiment pulse */}
+                    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
+                        <div className="text-sm font-medium text-zinc-100">Sentiment Pulse — 7d</div>
+                        {filteredCompetitors.map(c => {
+                            const sigs = MOCK_SIGNALS.filter(s=>s.competitorId===c.id);
+                            const pos = sigs.filter(s=>['product','business'].includes(s.type)&&s.severity!=='high').length;
+                            const neg = sigs.filter(s=>['legal','sentiment'].includes(s.type)||s.severity==='high').length;
+                            const neu = sigs.length - pos - neg;
+                            const total = Math.max(sigs.length, 1);
+                            return (
+                                <div key={c.id} className="flex items-center gap-3">
+                                    <CompetitorAvatar competitor={c} size="sm" />
+                                    <span className="text-xs text-zinc-300 w-28 truncate">{c.name}</span>
+                                    <div className="flex-1 flex gap-0.5 rounded overflow-hidden h-3">
+                                        <div className="bg-emerald-600" style={{width:`${(pos/total)*100}%`}} />
+                                        <div className="bg-zinc-600" style={{width:`${(neu/total)*100}%`}} />
+                                        <div className="bg-red-600" style={{width:`${(neg/total)*100}%`}} />
+                                    </div>
+                                    <span className="text-xs text-zinc-600">{sigs.length} signals</span>
+                                </div>
+                            );
+                        })}
+                        <div className="flex gap-4 text-xs text-zinc-500 pt-1">
+                            <span className="flex items-center gap-1"><span className="w-2 h-2 bg-emerald-600 rounded-sm" />Positive</span>
+                            <span className="flex items-center gap-1"><span className="w-2 h-2 bg-zinc-600 rounded-sm" />Neutral</span>
+                            <span className="flex items-center gap-1"><span className="w-2 h-2 bg-red-600 rounded-sm" />Negative</span>
+                        </div>
+                    </div>
+
+                    {/* Recent reports quick links */}
+                    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                            <div className="text-sm font-medium text-zinc-100">Recent Reports</div>
+                            <button className="text-xs text-sky-500 hover:text-sky-400" onClick={()=>onNavigate('profiles')}>View all</button>
+                        </div>
+                        {MOCK_COMPETITORS.slice(0,5).map(c => (
+                            <button key={c.id} onClick={()=>onNavigate('profiles', c.id)}
+                                    className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-800 transition-colors text-left">
+                                <CompetitorAvatar competitor={c} size="sm" />
+                                <div className="flex-1 min-w-0">
+                                    <div className="text-xs font-medium text-zinc-200">{c.name}</div>
+                                    <div className="text-xs text-zinc-500">Updated {c.lastActivity}</div>
+                                </div>
+                                <TierBadge tier={c.tier} />
+                            </button>
+                        ))}
+                        <button onClick={()=>onNavigate('weekly')}
+                                className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-800 transition-colors text-left border border-dashed border-zinc-700">
+                            <div className="w-6 h-6 rounded-lg bg-sky-900/40 border border-sky-800 flex items-center justify-center text-sky-400 text-xs">📊</div>
+                            <div className="flex-1">
+                                <div className="text-xs font-medium text-zinc-200">Weekly Market Report</div>
+                                <div className="text-xs text-zinc-500">Week of {MOCK_WEEKLY_REPORT.weekOf}</div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// ─── Competitor Profiles List ─────────────────────────────────────────────────
+const CompetitorProfiles = ({ initialId, onNavigate }) => {
+    const [selectedId, setSelectedId] = useState(initialId || 'c1');
+    const [tab, setTab] = useState('overview');
+    const competitor = MOCK_COMPETITORS.find(c=>c.id===selectedId);
+    const profile = MOCK_COMPETITOR_PROFILES[selectedId];
+    const signals = MOCK_SIGNALS.filter(s=>s.competitorId===selectedId);
+
+    const tabs = ['overview','product','funding','team','timeline'];
+
+    const defaultProfile = {
+        overview:{ founded:'N/A', hq:competitor?.hq||'—', stage:competitor?.stage||'—', employees:competitor?.employees||'—', website:competitor?.website||'—', description:'Profile data not yet available for this competitor.' },
+        market:{ primaryMarket:'—', segment:'—', valueProposition:'—', tier:competitor?.tier||'direct' },
+        product:{ features:[], pricing:'—' },
+        funding:{ total:competitor?.funding||'—', lastRound:competitor?.lastRound||'—', investors:'—', revenueSignals:'—' },
+        team:{ ceo:'—', keyExecs:'—', recentMoves:'—' },
+        gtm:{ channels:'—', partnerships:'—', integrations:'—' },
+        recentMoves:[],
+        riskSignals:[],
+    };
+    const p = profile || defaultProfile;
+
+    const unreadCount = MOCK_ALERTS.filter(a=>a.competitorId===selectedId&&!a.read).length;
+
+    return (
+        <div className="flex-1 flex overflow-hidden fade-in">
+            {/* Sidebar */}
+            <div className="w-64 border-r border-zinc-800 overflow-y-auto flex-shrink-0">
+                <div className="p-3 border-b border-zinc-800">
+                    <div className="text-xs text-zinc-500 mb-1 font-medium uppercase tracking-wider">Competitor Profiles</div>
+                    <div className="text-xs text-zinc-600">{MOCK_COMPETITORS.length} companies tracked</div>
+                </div>
+                {['direct','indirect','emerging'].map(tier => {
+                    const group = MOCK_COMPETITORS.filter(c=>c.tier===tier);
+                    return (
+                        <div key={tier}>
+                            <div className="px-3 py-2 text-xs text-zinc-600 uppercase tracking-wider font-medium">{tier}</div>
+                            {group.map(c => {
+                                const alerts = MOCK_ALERTS.filter(a=>a.competitorId===c.id&&!a.read).length;
+                                return (
+                                    <button key={c.id}
+                                            onClick={()=>{setSelectedId(c.id);setTab('overview')}}
+                                            className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors ${selectedId===c.id?'bg-zinc-800':'hover:bg-zinc-900'}`}>
+                                        <CompetitorAvatar competitor={c} size="sm" />
+                                        <div className="flex-1 min-w-0">
+                                            <div className="text-xs font-medium text-zinc-200 truncate">{c.name}</div>
+                                            <div className="text-xs text-zinc-600">{c.stage}</div>
+                                        </div>
+                                        {alerts > 0 && <span className="w-4 h-4 rounded-full bg-sky-600 text-white text-xs flex items-center justify-center flex-shrink-0">{alerts}</span>}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    );
+                })}
+            </div>
+
+            {/* Main profile */}
+            <div className="flex-1 overflow-y-auto">
+                <div className="px-6 py-5 space-y-5">
+                    {/* Header */}
+                    <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-3">
+                            <CompetitorAvatar competitor={competitor} size="lg" />
+                            <div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <h1 className="text-xl font-bold text-zinc-100">{competitor.name}</h1>
+                                    <TierBadge tier={competitor.tier} />
+                                    <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-0.5 rounded">{competitor.stage}</span>
+                                </div>
+                                <div className="text-zinc-400 text-sm mt-0.5">{competitor.website} · {competitor.hq}</div>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            {unreadCount > 0 && (
+                                <span className="text-xs text-sky-400 bg-sky-900/30 border border-sky-800/50 px-2 py-1 rounded-lg">
+                                    {unreadCount} new update{unreadCount>1?'s':''}
+                                </span>
+                            )}
+                            <span className="text-xs text-zinc-500">Updated {competitor.lastActivity}</span>
+                        </div>
+                    </div>
+
+                    {/* Tabs */}
+                    <div className="flex border-b border-zinc-800">
+                        {tabs.map(t => (
+                            <button key={t} onClick={()=>setTab(t)}
+                                    className={`px-4 py-2.5 text-sm font-medium transition-colors capitalize ${tab===t?'tab-active':'tab-inactive hover:text-zinc-300'}`}>
+                                {t === 'timeline' ? 'Intelligence Timeline' : t.charAt(0).toUpperCase()+t.slice(1)}
+                                {t==='timeline'&&signals.length>0&&<span className="ml-1.5 text-xs bg-sky-600 text-white px-1.5 py-0.5 rounded-full">{signals.length}</span>}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Tab content */}
+                    {tab === 'overview' && (
+                        <div className="space-y-4 slide-in">
+                            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
+                                <div className="text-xs text-zinc-500 font-medium uppercase tracking-wider">Company Overview</div>
+                                <p className="text-sm text-zinc-300 leading-relaxed">{p.overview.description}</p>
+                                <div className="grid grid-cols-3 gap-3">
+                                    {[['Founded', p.overview.founded],['HQ', p.overview.hq],['Stage', p.overview.stage],['Employees', p.overview.employees],['Website', p.overview.website],['Market', p.market.primaryMarket]].map(([k,v])=>(
+                                        <div key={k}>
+                                            <div className="text-xs text-zinc-600">{k}</div>
+                                            <div className="text-sm text-zinc-200 mt-0.5">{v}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-2">
+                                <div className="text-xs text-zinc-500 font-medium uppercase tracking-wider">Market Position</div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div><div className="text-xs text-zinc-600">Customer Segment</div><div className="text-sm text-zinc-200 mt-0.5">{p.market.segment}</div></div>
+                                    <div><div className="text-xs text-zinc-600">Tier</div><div className="mt-0.5"><TierBadge tier={p.market.tier} /></div></div>
+                                    <div className="col-span-2"><div className="text-xs text-zinc-600">Value Proposition</div><div className="text-sm text-zinc-200 mt-0.5">{p.market.valueProposition}</div></div>
+                                </div>
+                            </div>
+                            {p.riskSignals.length>0 && (
+                                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-2">
+                                    <div className="text-xs text-zinc-500 font-medium uppercase tracking-wider">Risk Signals</div>
+                                    {p.riskSignals.map((r,i)=>(
+                                        <div key={i} className="flex gap-2 text-sm text-zinc-300">
+                                            <span className="text-amber-500 mt-0.5 flex-shrink-0">⚠</span>{r}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            {p.recentMoves.length>0 && (
+                                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-2">
+                                    <div className="text-xs text-zinc-500 font-medium uppercase tracking-wider">Recent Moves (90 days)</div>
+                                    {p.recentMoves.map((r,i)=>(
+                                        <div key={i} className="flex gap-2 text-sm text-zinc-300">
+                                            <span className="text-sky-500 mt-0.5 flex-shrink-0">→</span>{r}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {tab === 'product' && (
+                        <div className="space-y-4 slide-in">
+                            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
+                                <div className="text-xs text-zinc-500 font-medium uppercase tracking-wider">Product & Pricing</div>
+                                <div>
+                                    <div className="text-xs text-zinc-600 mb-2">Key Features</div>
+                                    <div className="space-y-1">
+                                        {p.product.features.map((f,i)=>(
+                                            <div key={i} className="flex items-start gap-2 text-sm text-zinc-300">
+                                                <span className="text-sky-600 mt-0.5">•</span>{f}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="text-xs text-zinc-600 mb-1">Pricing</div>
+                                    <p className="text-sm text-zinc-300">{p.product.pricing}</p>
+                                </div>
+                            </div>
+                            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
+                                <div className="text-xs text-zinc-500 font-medium uppercase tracking-wider">Go-to-Market</div>
+                                {[['Acquisition Channels', p.gtm.channels],['Key Partnerships', p.gtm.partnerships],['Integrations', p.gtm.integrations]].map(([k,v])=>(
+                                    <div key={k}><div className="text-xs text-zinc-600">{k}</div><div className="text-sm text-zinc-300 mt-0.5">{v}</div></div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {tab === 'funding' && (
+                        <div className="space-y-4 slide-in">
+                            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
+                                <div className="text-xs text-zinc-500 font-medium uppercase tracking-wider">Funding & Financials</div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    {[['Total Funding', p.funding.total],['Last Round', p.funding.lastRound],['Investors', p.funding.investors],['Revenue Signals', p.funding.revenueSignals]].map(([k,v])=>(
+                                        <div key={k} className={k==='Revenue Signals'||k==='Investors'?'col-span-2':''}>
+                                            <div className="text-xs text-zinc-600">{k}</div>
+                                            <div className="text-sm text-zinc-200 mt-0.5">{v}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {tab === 'team' && (
+                        <div className="space-y-4 slide-in">
+                            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
+                                <div className="text-xs text-zinc-500 font-medium uppercase tracking-wider">Team & Leadership</div>
+                                {[['CEO', p.team.ceo],['Key Executives', p.team.keyExecs],['Recent Moves', p.team.recentMoves]].map(([k,v])=>(
+                                    <div key={k}><div className="text-xs text-zinc-600">{k}</div><div className="text-sm text-zinc-300 mt-0.5">{v}</div></div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {tab === 'timeline' && (
+                        <div className="space-y-3 slide-in">
+                            <div className="flex items-center justify-between">
+                                <p className="text-xs text-zinc-500">Updates are prepended newest-first. Each entry is immutable once created.</p>
+                                <span className="text-xs text-zinc-600">{signals.length} entries</span>
+                            </div>
+                            {signals.length === 0 && (
+                                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 text-center text-zinc-500 text-sm">
+                                    No timeline entries yet. Check back after the next daily poll.
+                                </div>
+                            )}
+                            {signals.map((sig, i) => (
+                                <div key={sig.id} className="flex gap-3">
+                                    <div className="flex flex-col items-center">
+                                        <div className="w-2 h-2 rounded-full bg-sky-600 mt-1.5 flex-shrink-0" />
+                                        {i < signals.length-1 && <div className="w-px flex-1 bg-zinc-800 mt-1" />}
+                                    </div>
+                                    <div className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-2 mb-3">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <span className="text-xs text-zinc-400">{sig.date}</span>
+                                            <SignalBadge type={sig.type} />
+                                            <SeverityBadge severity={sig.severity} />
+                                            <span className="text-xs text-zinc-600">via {sig.source}</span>
+                                        </div>
+                                        <p className="text-sm text-zinc-300 leading-relaxed">{sig.summary}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// ─── Spreadsheet View ─────────────────────────────────────────────────────────
+const SpreadsheetView = () => {
+    const [selectedVersion, setSelectedVersion] = useState('v2.3');
+    const [compareVersion, setCompareVersion] = useState(null);
+    const [drawerOpen, setDrawerOpen] = useState(false);
+    const [showHistory, setShowHistory] = useState(false);
+
+    const currentVersionData = MOCK_SPREADSHEET_VERSIONS.find(v=>v.label===selectedVersion);
+    const changedCols = currentVersionData?.changedCols || {};
+
+    const cols = ['name','tier','stage','employees','funding','lastRound','lastRoundDate','pricingModel','hq','lastActivity','alertCount7d','status'];
+    const headers = { name:'Competitor', tier:'Tier', stage:'Stage', employees:'Employees', funding:'Total Funding', lastRound:'Last Round', lastRoundDate:'Round Date', pricingModel:'Pricing', hq:'HQ', lastActivity:'Last Activity', alertCount7d:'Alerts (7d)', status:'Status' };
+
+    const isChanged = (competitorId, col) => {
+        if (!changedCols[competitorId]) return false;
+        return changedCols[competitorId].includes(col) || changedCols[competitorId].includes('all');
+    };
+
+    return (
+        <div className="flex-1 overflow-hidden flex flex-col fade-in">
+            {/* Header bar */}
+            <div className="px-6 py-3 border-b border-zinc-800 flex items-center justify-between flex-shrink-0">
+                <div className="flex items-center gap-3">
+                    <h2 className="text-sm font-semibold text-zinc-100">Competitive Intelligence Spreadsheet</h2>
+                    <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-0.5 rounded font-mono">{selectedVersion}</span>
+                    <span className="text-xs text-zinc-600">{currentVersionData?.date}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <button onClick={()=>setShowHistory(!showHistory)}
+                            className="text-xs border border-zinc-700 hover:border-sky-700 text-zinc-400 hover:text-sky-400 px-3 py-1.5 rounded-lg transition-colors">
+                        Version History
+                    </button>
+                    <button className="text-xs border border-zinc-700 text-zinc-400 hover:text-zinc-200 px-3 py-1.5 rounded-lg transition-colors">
+                        Export CSV
+                    </button>
+                    <button className="text-xs border border-zinc-700 text-zinc-400 hover:text-zinc-200 px-3 py-1.5 rounded-lg transition-colors">
+                        Export XLSX
+                    </button>
+                </div>
+            </div>
+
+            {/* Version history drawer (inline) */}
+            {showHistory && (
+                <div className="border-b border-zinc-800 bg-zinc-950 px-6 py-3 flex-shrink-0 fade-in">
+                    <div className="flex items-center gap-2 mb-2">
+                        <span className="text-xs text-zinc-400 font-medium">Version History</span>
+                        <span className="text-xs text-zinc-600">{MOCK_SPREADSHEET_VERSIONS.length} versions</span>
+                    </div>
+                    <div className="flex gap-2 overflow-x-auto pb-1">
+                        {MOCK_SPREADSHEET_VERSIONS.map(v => (
+                            <button key={v.label}
+                                    onClick={()=>setSelectedVersion(v.label)}
+                                    className={`flex-shrink-0 text-left p-2.5 rounded-lg border text-xs transition-colors ${selectedVersion===v.label?'border-sky-700 bg-sky-900/20 text-sky-300':'border-zinc-800 hover:border-zinc-600 text-zinc-400'}`}
+                                    style={{minWidth:140}}>
+                                <div className="font-mono font-bold mb-0.5">{v.label}</div>
+                                <div className="text-zinc-600 mb-1">{v.date}</div>
+                                {v.changes.slice(0,2).map((c,i)=><div key={i} className="text-zinc-500 truncate">· {c}</div>)}
+                                {v.changes.length>2&&<div className="text-zinc-600">+{v.changes.length-2} more</div>}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Legend for changed cells */}
+            {Object.keys(changedCols).length > 0 && (
+                <div className="px-6 py-2 border-b border-zinc-800 flex items-center gap-2 flex-shrink-0">
+                    <span className="w-3 h-3 rounded-sm bg-sky-900/40 border-l-2 border-sky-600 flex-shrink-0" />
+                    <span className="text-xs text-zinc-500">Highlighted cells changed in {selectedVersion}</span>
+                </div>
+            )}
+
+            {/* Table */}
+            <div className="flex-1 overflow-auto">
+                <table className="w-full text-xs border-separate border-spacing-0">
+                    <thead>
+                        <tr className="bg-zinc-950 sticky top-0 z-10">
+                            {cols.map(col => (
+                                <th key={col} className="text-left text-zinc-500 font-medium px-3 py-2.5 border-b border-zinc-800 whitespace-nowrap">
+                                    {headers[col]}
+                                </th>
+                            ))}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {MOCK_COMPETITORS.map((c, ri) => (
+                            <tr key={c.id} className={`table-row-hover ${ri%2===0?'':'bg-zinc-950/40'}`}>
+                                {cols.map(col => {
+                                    const changed = isChanged(c.id, col);
+                                    let val = c[col];
+                                    let cell = null;
+                                    if (col === 'name') cell = (
+                                        <div className="flex items-center gap-2">
+                                            <CompetitorAvatar competitor={c} size="sm" />
+                                            <span className="font-medium text-zinc-200">{c.name}</span>
+                                        </div>
+                                    );
+                                    else if (col === 'tier') cell = <TierBadge tier={c.tier} />;
+                                    else if (col === 'status') cell = (
+                                        <span className={`px-1.5 py-0.5 rounded text-xs ${c.status==='active'?'text-emerald-400 bg-emerald-900/20':'text-zinc-400 bg-zinc-800'}`}>
+                                            {c.status}
+                                        </span>
+                                    );
+                                    else if (col === 'alertCount7d') cell = (
+                                        <span className={val>0?'text-sky-400 font-medium':'text-zinc-600'}>{val}</span>
+                                    );
+                                    else cell = <span className="text-zinc-300">{val}</span>;
+
+                                    return (
+                                        <td key={col} className={`px-3 py-2.5 border-b border-zinc-900 whitespace-nowrap ${changed?'changed-cell':''}`}>
+                                            {cell}
+                                        </td>
+                                    );
+                                })}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
+};
+
+// ─── Alerts View ──────────────────────────────────────────────────────────────
+const AlertsView = () => {
+    const [alerts, setAlerts] = useState(MOCK_ALERTS);
+    const [severity, setSeverity] = useState('all');
+    const [filter, setFilter] = useState('all'); // all | unread | read
+
+    const markRead = (id) => setAlerts(prev => prev.map(a => a.id===id?{...a,read:true}:a));
+    const markAllRead = () => setAlerts(prev => prev.map(a=>({...a,read:true})));
+
+    const filtered = alerts.filter(a => {
+        if (severity !== 'all' && a.severity !== severity) return false;
+        if (filter === 'unread' && a.read) return false;
+        if (filter === 'read' && !a.read) return false;
+        return true;
+    });
+
+    const unread = alerts.filter(a=>!a.read).length;
+
+    const formatTime = (iso) => {
+        const d = new Date(iso);
+        return d.toLocaleDateString('en-US', {month:'short',day:'numeric'}) + ' · ' + d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+    };
+
+    return (
+        <div className="flex-1 overflow-y-auto fade-in">
+            <div className="max-w-3xl mx-auto px-6 py-5 space-y-4">
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h2 className="text-xl font-bold text-zinc-100">Alerts</h2>
+                        <p className="text-zinc-500 text-sm mt-0.5">{unread} unread · {alerts.length} total</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <select className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-xs text-zinc-300 focus:outline-none"
+                                value={severity} onChange={e=>setSeverity(e.target.value)}>
+                            <option value="all">All severities</option>
+                            <option value="critical">Critical only</option>
+                            <option value="high">High +</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                        </select>
+                        <select className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-xs text-zinc-300 focus:outline-none"
+                                value={filter} onChange={e=>setFilter(e.target.value)}>
+                            <option value="all">All</option>
+                            <option value="unread">Unread</option>
+                            <option value="read">Read</option>
+                        </select>
+                        {unread > 0 && (
+                            <button onClick={markAllRead} className="text-xs text-zinc-400 hover:text-zinc-200 px-3 py-1.5 border border-zinc-700 rounded-lg transition-colors">
+                                Mark all read
+                            </button>
+                        )}
+                    </div>
+                </div>
+
+                {/* Alert list */}
+                {filtered.length === 0 && (
+                    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 text-center text-zinc-500 text-sm">
+                        No alerts match your filters.
+                    </div>
+                )}
+                {filtered.map(alert => {
+                    const comp = MOCK_COMPETITORS.find(c=>c.id===alert.competitorId);
+                    const sig = MOCK_SIGNALS.find(s=>s.id===alert.signalId);
+                    if (!comp) return null;
+                    return (
+                        <div key={alert.id}
+                             className={`bg-zinc-900 border rounded-xl p-4 flex gap-3 transition-colors ${alert.read?'border-zinc-800 opacity-70':'border-zinc-700'}`}>
+                            {!alert.read && <div className="w-1.5 h-1.5 rounded-full bg-sky-500 mt-1.5 flex-shrink-0" />}
+                            {alert.read && <div className="w-1.5 h-1.5 mt-1.5 flex-shrink-0" />}
+                            <CompetitorAvatar competitor={comp} size="sm" />
+                            <div className="flex-1 min-w-0 space-y-1.5">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-xs font-medium text-zinc-200">{comp.name}</span>
+                                    {sig && <SignalBadge type={sig.type} />}
+                                    <SeverityBadge severity={alert.severity} />
+                                    <span className="text-xs text-zinc-600">{formatTime(alert.date)}</span>
+                                </div>
+                                <p className="text-sm text-zinc-300 leading-relaxed">{alert.body}</p>
+                            </div>
+                            {!alert.read && (
+                                <button onClick={()=>markRead(alert.id)} className="text-xs text-zinc-600 hover:text-zinc-400 flex-shrink-0">Mark read</button>
+                            )}
+                        </div>
+                    );
+                })}
+
+                {/* Delivery settings */}
+                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
+                    <div className="text-xs text-zinc-500 font-medium uppercase tracking-wider">Alert Delivery Settings</div>
+                    <div className="grid grid-cols-2 gap-3">
+                        {[['In-app notifications','Enabled'],['Email digest','End-of-day batch'],['Slack','Not connected'],['Minimum severity','High + Critical']].map(([k,v])=>(
+                            <div key={k} className="flex items-center justify-between p-2.5 bg-zinc-950 rounded-lg">
+                                <span className="text-xs text-zinc-400">{k}</span>
+                                <span className="text-xs text-zinc-300">{v}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// ─── Weekly Report ────────────────────────────────────────────────────────────
+const WeeklyReport = () => {
+    const r = MOCK_WEEKLY_REPORT;
+    const sevColors = { critical:'text-red-400', high:'text-amber-400', medium:'text-sky-400', low:'text-zinc-400' };
+
+    return (
+        <div className="flex-1 overflow-y-auto fade-in">
+            <div className="max-w-3xl mx-auto px-6 py-5 space-y-5">
+                {/* Header */}
+                <div className="flex items-start justify-between">
+                    <div>
+                        <div className="text-xs text-zinc-500 mb-1">Weekly Market Report</div>
+                        <h1 className="text-2xl font-bold text-zinc-100">Week of {r.weekOf}</h1>
+                        <p className="text-zinc-500 text-sm mt-0.5">Generated {new Date(r.generatedAt).toLocaleString('en-US',{weekday:'long',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'})}</p>
+                    </div>
+                    <div className="flex gap-2">
+                        <button className="text-xs border border-zinc-700 text-zinc-400 hover:text-zinc-200 px-3 py-1.5 rounded-lg transition-colors">Export PDF</button>
+                        <button className="text-xs bg-sky-600 hover:bg-sky-500 text-white px-3 py-1.5 rounded-lg transition-colors">Generate Now</button>
+                    </div>
+                </div>
+
+                {/* Alert summary strip */}
+                <div className="flex gap-2 flex-wrap">
+                    {Object.entries(r.alertSummary).filter(([k])=>k!=='total').map(([sev,count])=>(
+                        <div key={sev} className="flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5">
+                            <span className={`text-sm font-bold ${sevColors[sev]}`}>{count}</span>
+                            <span className="text-xs text-zinc-500 capitalize">{sev}</span>
+                        </div>
+                    ))}
+                    <div className="flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5">
+                        <span className="text-sm font-bold text-zinc-200">{r.alertSummary.total}</span>
+                        <span className="text-xs text-zinc-500">total alerts</span>
+                    </div>
+                </div>
+
+                {/* Market Pulse */}
+                <div className="bg-sky-900/20 border border-sky-800/50 rounded-xl p-4 space-y-2">
+                    <div className="flex items-center gap-2 text-xs text-sky-400 font-medium uppercase tracking-wider">
+                        <span>⚡</span> Market Pulse
+                    </div>
+                    <p className="text-sm text-zinc-200 leading-relaxed">{r.marketPulse}</p>
+                </div>
+
+                {/* Top Stories */}
+                <div className="space-y-3">
+                    <div className="text-xs text-zinc-500 font-medium uppercase tracking-wider">Top Stories</div>
+                    {r.topStories.map((s,i) => {
+                        const comp = MOCK_COMPETITORS.find(c=>c.name===s.competitor);
+                        return (
+                            <div key={i} className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-2">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    {comp && <CompetitorAvatar competitor={comp} size="sm" />}
+                                    <span className="font-medium text-zinc-100 text-sm">{s.title}</span>
+                                    <SignalBadge type={s.type} />
+                                    <SeverityBadge severity={s.severity} />
+                                </div>
+                                <p className="text-sm text-zinc-300 leading-relaxed">{s.summary}</p>
+                            </div>
+                        );
+                    })}
+                </div>
+
+                {/* Competitor Moves */}
+                <div className="space-y-3">
+                    <div className="text-xs text-zinc-500 font-medium uppercase tracking-wider">Competitor Moves</div>
+                    <div className="bg-zinc-900 border border-zinc-800 rounded-xl divide-y divide-zinc-800">
+                        {r.competitorMoves.map((cm,i) => {
+                            const comp = MOCK_COMPETITORS.find(c=>c.name===cm.competitor);
+                            return (
+                                <div key={i} className="p-3 flex gap-3">
+                                    {comp && <CompetitorAvatar competitor={comp} size="sm" />}
+                                    <div className="flex-1">
+                                        <div className="text-xs font-medium text-zinc-200 mb-1">{cm.competitor}</div>
+                                        {cm.moves.map((m,j)=>(
+                                            <div key={j} className="text-xs text-zinc-400 flex gap-1.5">
+                                                <span className="text-zinc-600 mt-0.5">·</span>{m}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Funding & M&A */}
+                <div className="space-y-2">
+                    <div className="text-xs text-zinc-500 font-medium uppercase tracking-wider">Funding & M&A</div>
+                    {r.fundingMA.map((item,i)=>(
+                        <div key={i} className="bg-zinc-900 border border-zinc-800 rounded-xl p-3 flex items-center gap-2">
+                            <span className="text-emerald-500 text-sm">💰</span>
+                            <span className="text-sm text-zinc-300">{item}</span>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Signals to Watch */}
+                <div className="space-y-2">
+                    <div className="text-xs text-zinc-500 font-medium uppercase tracking-wider">Signals to Watch</div>
+                    {r.signalsToWatch.map((s,i)=>(
+                        <div key={i} className="bg-zinc-900 border border-zinc-800 rounded-xl p-3 flex gap-2">
+                            <span className="text-amber-500 flex-shrink-0">👁</span>
+                            <span className="text-sm text-zinc-300">{s}</span>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Delivery settings */}
+                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
+                    <div className="text-xs text-zinc-500 font-medium uppercase tracking-wider">Report Delivery</div>
+                    <div className="flex items-center justify-between">
+                        <span className="text-sm text-zinc-300">Weekly delivery schedule</span>
+                        <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">Monday · 7:00 AM</span>
+                    </div>
+                    <div className="flex gap-2">
+                        {['In-app','Email'].map(ch=>(
+                            <span key={ch} className="text-xs text-emerald-400 bg-emerald-900/20 border border-emerald-800/40 px-2 py-0.5 rounded">{ch}</span>
+                        ))}
+                        <span className="text-xs text-zinc-600 bg-zinc-800 px-2 py-0.5 rounded">Slack (not connected)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// ─── App Shell ────────────────────────────────────────────────────────────────
+const App = () => {
+    // flow: 'setup' | 'confirm' | 'main'
+    const [flow, setFlow] = useState('setup');
+    const [view, setView] = useState('dashboard');
+    const [profileId, setProfileId] = useState(null);
+    const unreadAlerts = MOCK_ALERTS.filter(a=>!a.read).length;
+
+    const navigate = (target, id) => {
+        setView(target);
+        if (id) setProfileId(id);
+    };
+
+    const navItems = [
+        { id:'dashboard', label:'Market Dashboard', icon:'⬡' },
+        { id:'profiles', label:'Competitor Profiles', icon:'📋' },
+        { id:'spreadsheet', label:'Spreadsheet', icon:'🗂' },
+        { id:'alerts', label:'Alerts', icon:'🔔', badge: unreadAlerts },
+        { id:'weekly', label:'Weekly Report', icon:'📊' },
+    ];
+
+    if (flow === 'setup') return (
+        <div className="h-screen flex flex-col bg-black">
+            <div className="h-12 border-b border-zinc-900 flex items-center px-5">
+                <span className="text-sm font-semibold text-zinc-100">Trava</span>
+                <span className="text-zinc-700 mx-2">·</span>
+                <span className="text-xs text-zinc-500">Competitive Analysis</span>
+            </div>
+            <IdeaInput onComplete={() => setFlow('confirm')} />
+        </div>
+    );
+
+    if (flow === 'confirm') return (
+        <div className="h-screen flex flex-col bg-black">
+            <div className="h-12 border-b border-zinc-900 flex items-center px-5">
+                <span className="text-sm font-semibold text-zinc-100">Trava</span>
+                <span className="text-zinc-700 mx-2">·</span>
+                <span className="text-xs text-zinc-500">Competitive Analysis</span>
+            </div>
+            <ConfirmationScreen onConfirm={() => { setFlow('main'); setView('dashboard'); }} />
+        </div>
+    );
+
+    return (
+        <div className="h-screen flex flex-col bg-black">
+            {/* Top bar */}
+            <div className="h-12 border-b border-zinc-900 flex items-center px-5 gap-3 flex-shrink-0">
+                <span className="text-sm font-semibold text-zinc-100">Trava</span>
+                <span className="text-zinc-700 mx-1">·</span>
+                <span className="text-xs text-zinc-400 truncate max-w-xs">{MOCK_ANALYSIS.name}</span>
+                <div className="flex-1" />
+                <div className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                    <span className="text-xs text-zinc-500">Monitoring active · Next poll 6:00 AM</span>
+                </div>
+            </div>
+
+            <div className="flex flex-1 overflow-hidden">
+                {/* Sidebar nav */}
+                <nav className="w-52 border-r border-zinc-900 bg-zinc-950 flex-shrink-0 py-3">
+                    <div className="px-3 mb-3">
+                        <div className="text-xs text-zinc-600 uppercase tracking-wider font-medium px-2 mb-1">Analysis</div>
+                    </div>
+                    {navItems.map(item => (
+                        <button key={item.id} onClick={()=>{ setView(item.id); if(item.id!=='profiles') setProfileId(null); }}
+                                className={`w-full flex items-center gap-2.5 px-5 py-2.5 text-sm text-left transition-colors ${view===item.id?'text-zinc-100 bg-zinc-800':'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900'}`}>
+                            <span className="text-base leading-none">{item.icon}</span>
+                            <span className="flex-1">{item.label}</span>
+                            {item.badge > 0 && (
+                                <span className="w-5 h-5 rounded-full bg-sky-600 text-white text-xs flex items-center justify-center flex-shrink-0">{item.badge}</span>
+                            )}
+                        </button>
+                    ))}
+
+                    <div className="px-3 mt-4 pt-4 border-t border-zinc-800">
+                        <div className="text-xs text-zinc-600 uppercase tracking-wider font-medium px-2 mb-1">Settings</div>
+                        <button className="w-full flex items-center gap-2.5 px-5 py-2.5 text-sm text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900 transition-colors text-left">
+                            <span className="text-base leading-none">⚙</span>
+                            <span>Polling Schedule</span>
+                        </button>
+                        <button className="w-full flex items-center gap-2.5 px-5 py-2.5 text-sm text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900 transition-colors text-left">
+                            <span className="text-base leading-none">+</span>
+                            <span>New Analysis</span>
+                        </button>
+                    </div>
+                </nav>
+
+                {/* Main content */}
+                {view === 'dashboard' && <MarketDashboard onNavigate={navigate} />}
+                {view === 'profiles' && <CompetitorProfiles initialId={profileId} onNavigate={navigate} />}
+                {view === 'spreadsheet' && <SpreadsheetView />}
+                {view === 'alerts' && <AlertsView />}
+                {view === 'weekly' && <WeeklyReport />}
+            </div>
+        </div>
+    );
+};
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
