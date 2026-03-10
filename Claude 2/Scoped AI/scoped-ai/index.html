@@ -4427,7 +4427,6 @@ const MOCK_FEATURES = [
 ];
 
 // ─── Scoring Engine ────────────────────────────────────────────────────────────
-const TODAY = new Date('2026-03-10');
 
 const normalizeARR = (arr) => {
     if (!arr || arr <= 0) return 0;
@@ -4587,6 +4586,14 @@ const NameList = ({ names, max = 4, color = '#B0B8D0' }) => {
 };
 
 const ScoreColor = (score) => score >= 8 ? '#34ffbd' : score >= 6 ? '#a5b4fc' : score >= 4 ? '#ffd040' : '#ff6b84';
+
+// Small reusable labeled section for detail panel
+const Section = ({ label, children }) => (
+    <div className="space-y-1.5">
+        <div className="text-xs font-medium text-[#48527A] uppercase tracking-wider">{label}</div>
+        {children}
+    </div>
+);
 
 
 // ─── Feature Tracker View ─────────────────────────────────────────────────────
@@ -4940,15 +4947,6 @@ const FeatureTrackerView = () => {
         </div>
     );
 };
-
-// Small reusable labeled section for detail panel
-const Section = ({ label, children }) => (
-    <div className="space-y-1.5">
-        <div className="text-xs font-medium text-[#48527A] uppercase tracking-wider">{label}</div>
-        {children}
-    </div>
-);
-
 
 // ─── Value vs Effort Matrix ────────────────────────────────────────────────────
 
