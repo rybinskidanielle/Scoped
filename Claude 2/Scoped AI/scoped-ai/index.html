@@ -305,7 +305,16 @@
     </style>
 </head>
 <body>
-<div id="root"></div>
+<div id="root">
+    <div style="height:100vh;display:flex;align-items:center;justify-content:center;background:#090B1E;flex-direction:column;gap:16px">
+        <div style="display:flex;gap:6px">
+            <div style="width:8px;height:8px;border-radius:50%;background:#a5b4fc;animation:pulse 1s ease-in-out infinite"></div>
+            <div style="width:8px;height:8px;border-radius:50%;background:#a5b4fc;animation:pulse 1s ease-in-out infinite 0.2s"></div>
+            <div style="width:8px;height:8px;border-radius:50%;background:#a5b4fc;animation:pulse 1s ease-in-out infinite 0.4s"></div>
+        </div>
+        <div style="font-family:Inter,sans-serif;font-size:13px;color:#48527A">Loading Scoped AI…</div>
+    </div>
+</div>
 <script type="text/babel">
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
@@ -4185,6 +4194,764 @@ const SettingsConnections = () => {
 };
 
 
+// ─── Priorities Mock Data ─────────────────────────────────────────────────────
+
+const MOCK_FEATURES = [
+    {
+        id: 'f1',
+        title: 'AI-Powered Deal Risk Scoring',
+        description: 'Surface real-time deal health scores in the CRM sidebar using enrichment signals and historical win/loss patterns.',
+        tags: ['ai', 'crm', 'revenue'],
+        source: 'jira', sourceId: 'ENG-501',
+        status: 'backlog',
+        // Scoring dimensions (0–10)
+        revenueWeight: 9.2,        // ARR impact / deals influenced
+        signalFrequency: 8.7,      // How often customers ask for this
+        strategicFit: 9.0,         // Alignment with product vision
+        effort: 8,                 // Dev effort (higher = harder)
+        confidence: 85,            // % confidence in estimates
+        // Derived
+        requestCount: 34,
+        associatedARR: 420000,
+        competitorHas: ['c1','c2'],
+        winLossImpact: 'high',
+        requestedBy: ['Acme Corp', 'Meridian Health', 'Volta Energy', '+31 more'],
+        notes: 'Requested in every enterprise discovery call in Q1.',
+    },
+    {
+        id: 'f2',
+        title: 'Slack Digest — Daily Deal Brief',
+        description: 'Send a configurable Slack digest summarizing open deals, competitor movements, and flagged risks each morning.',
+        tags: ['integrations', 'notifications'],
+        source: 'linear', sourceId: 'LIN-102',
+        status: 'backlog',
+        revenueWeight: 7.4,
+        signalFrequency: 9.1,
+        strategicFit: 7.8,
+        effort: 3,
+        confidence: 92,
+        requestCount: 51,
+        associatedARR: 185000,
+        competitorHas: ['c2'],
+        winLossImpact: 'medium',
+        requestedBy: ['Novo Labs', 'Pulse Retail', '+49 more'],
+        notes: 'Highest raw request count. Low effort makes this a quick win.',
+    },
+    {
+        id: 'f3',
+        title: 'Custom Scoring Weights per Workspace',
+        description: 'Let PMs define their own weighting formula for the prioritization score — adjusting revenue, signal, and strategic fit levers.',
+        tags: ['product', 'configuration'],
+        source: 'asana', sourceId: 'PROD-201',
+        status: 'backlog',
+        revenueWeight: 6.1,
+        signalFrequency: 5.4,
+        strategicFit: 8.5,
+        effort: 4,
+        confidence: 78,
+        requestCount: 18,
+        associatedARR: 95000,
+        competitorHas: [],
+        winLossImpact: 'low',
+        requestedBy: ['Meridian Health', 'Orbit SaaS', '+16 more'],
+        notes: 'Strong ask from power users. Differentiates from rigid competitors.',
+    },
+    {
+        id: 'f4',
+        title: 'CRM Two-Way Field Sync (Salesforce)',
+        description: 'Push enrichment data back to Salesforce custom fields so reps see Scoped context directly in their CRM without switching tabs.',
+        tags: ['integrations', 'salesforce', 'enterprise'],
+        source: 'jira', sourceId: 'ENG-488',
+        status: 'backlog',
+        revenueWeight: 8.8,
+        signalFrequency: 7.2,
+        strategicFit: 8.2,
+        effort: 7,
+        confidence: 70,
+        requestCount: 27,
+        associatedARR: 310000,
+        competitorHas: ['c1','c3'],
+        winLossImpact: 'high',
+        requestedBy: ['Vantage Global', 'Summit RE', '+25 more'],
+        notes: 'Blocker for 3 enterprise deals currently in late-stage negotiation.',
+    },
+    {
+        id: 'f5',
+        title: 'Competitor Feature Comparison Table',
+        description: 'Auto-generated side-by-side feature matrix comparing Scoped to tracked competitors, updated weekly from signal ingestion.',
+        tags: ['insights', 'competitive'],
+        source: 'linear', sourceId: 'LIN-98',
+        status: 'in_progress',
+        revenueWeight: 6.8,
+        signalFrequency: 7.9,
+        strategicFit: 9.1,
+        effort: 5,
+        confidence: 88,
+        requestCount: 29,
+        associatedARR: 140000,
+        competitorHas: ['c1'],
+        winLossImpact: 'medium',
+        requestedBy: ['Cascade Ventures', 'Lumio', '+27 more'],
+        notes: 'Sales team using manual spreadsheets today — this replaces that.',
+    },
+    {
+        id: 'f6',
+        title: 'Mobile Push Notifications',
+        description: 'Deliver critical deal alerts and competitive triggers via iOS/Android push notifications for field sales teams.',
+        tags: ['mobile', 'notifications'],
+        source: 'asana', sourceId: 'PROD-178',
+        status: 'backlog',
+        revenueWeight: 4.2,
+        signalFrequency: 4.8,
+        strategicFit: 5.5,
+        effort: 6,
+        confidence: 65,
+        requestCount: 14,
+        associatedARR: 60000,
+        competitorHas: ['c2','c3'],
+        winLossImpact: 'low',
+        requestedBy: ['Field reps at Vantage', '+13 more'],
+        notes: 'Niche use case. Low signal frequency suggests limited demand.',
+    },
+    {
+        id: 'f7',
+        title: 'Buyer Intent Signal Feed',
+        description: 'Ingest third-party intent data (G2, Bombora) and surface accounts showing buying signals for competitor products.',
+        tags: ['ai', 'signals', 'revenue'],
+        source: 'jira', sourceId: 'ENG-512',
+        status: 'backlog',
+        revenueWeight: 8.5,
+        signalFrequency: 6.3,
+        strategicFit: 9.3,
+        effort: 9,
+        confidence: 60,
+        requestCount: 22,
+        associatedARR: 275000,
+        competitorHas: ['c1'],
+        winLossImpact: 'high',
+        requestedBy: ['Orbit SaaS', 'Meridian Health', '+20 more'],
+        notes: 'High strategic value but significant data partnership complexity.',
+    },
+    {
+        id: 'f8',
+        title: 'Weekly AI Digest Email — Rewrite',
+        description: 'Redesign the weekly email digest with better signal clustering, executive summary, and one-click deep links to competitor profiles.',
+        tags: ['ai', 'email', 'product'],
+        source: 'linear', sourceId: 'LIN-109',
+        status: 'backlog',
+        revenueWeight: 5.5,
+        signalFrequency: 6.8,
+        strategicFit: 6.2,
+        effort: 3,
+        confidence: 90,
+        requestCount: 31,
+        associatedARR: 90000,
+        competitorHas: [],
+        winLossImpact: 'low',
+        requestedBy: ['Multiple accounts in NPS survey'],
+        notes: 'Current digest has 34% open rate. Rewrite expected to push to 55%+.',
+    },
+    {
+        id: 'f9',
+        title: 'HubSpot Native Integration',
+        description: 'First-class HubSpot CRM integration with contact enrichment, deal sync, and Scoped sidebar for HubSpot Sales Hub.',
+        tags: ['integrations', 'hubspot', 'enterprise'],
+        source: 'asana', sourceId: 'PROD-199',
+        status: 'backlog',
+        revenueWeight: 7.9,
+        signalFrequency: 8.2,
+        strategicFit: 7.5,
+        effort: 7,
+        confidence: 75,
+        requestCount: 38,
+        associatedARR: 220000,
+        competitorHas: ['c1','c2','c3'],
+        winLossImpact: 'high',
+        requestedBy: ['29 HubSpot users in onboarding survey'],
+        notes: 'Strongest request from SMB segment. All top competitors have this.',
+    },
+];
+
+// Compute prioritization score: weighted formula
+// Score = (revenueWeight * 0.40) + (signalFrequency * 0.35) + (strategicFit * 0.25) — then penalize for high effort
+const computeScore = (f) => {
+    const raw = (f.revenueWeight * 0.40) + (f.signalFrequency * 0.35) + (f.strategicFit * 0.25);
+    const effortPenalty = (f.effort - 5) * 0.08; // effort 1-4 gives bonus, 6-10 penalizes
+    return Math.min(10, Math.max(0, raw - effortPenalty));
+};
+
+const SCORED_FEATURES = MOCK_FEATURES
+    .map(f => ({ ...f, score: Math.round(computeScore(f) * 10) / 10 }))
+    .sort((a, b) => b.score - a.score)
+    .map((f, i) => ({ ...f, rank: i + 1 }));
+
+
+// ─── Priorities Module ────────────────────────────────────────────────────────
+
+const PrioritiesModule = () => {
+    const [view, setView] = useState('tracker');
+
+    return (
+        <div className="flex-1 flex flex-col min-h-0">
+            {/* Sub-nav */}
+            <div className="flex-shrink-0 border-b border-[#1A2448] bg-[#07081A] px-6">
+                <div className="flex items-center gap-0">
+                    {[
+                        { id: 'tracker', label: 'Feature Tracker' },
+                        { id: 'matrix', label: 'Value vs Effort' },
+                    ].map(tab => (
+                        <button key={tab.id} onClick={() => setView(tab.id)}
+                            className={`px-4 py-3 text-xs font-medium transition-colors border-b-2 -mb-px ${view === tab.id ? 'tab-active' : 'tab-inactive hover:text-[#B0B8D0]'}`}>
+                            {tab.label}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {view === 'tracker' && <FeatureTrackerView />}
+            {view === 'matrix'  && <ValueEffortMatrix />}
+        </div>
+    );
+};
+
+
+// ─── Feature Tracker View ─────────────────────────────────────────────────────
+
+const FeatureTrackerView = () => {
+    const [sortBy, setSortBy] = useState('score');
+    const [statusFilter, setStatusFilter] = useState('all');
+    const [selectedId, setSelectedId] = useState(null);
+
+    const sorted = [...SCORED_FEATURES]
+        .filter(f => statusFilter === 'all' || f.status === statusFilter)
+        .sort((a, b) => {
+            if (sortBy === 'score')     return b.score - a.score;
+            if (sortBy === 'revenue')   return b.revenueWeight - a.revenueWeight;
+            if (sortBy === 'signal')    return b.signalFrequency - a.signalFrequency;
+            if (sortBy === 'effort')    return a.effort - b.effort; // low effort first
+            if (sortBy === 'arr')       return b.associatedARR - a.associatedARR;
+            return 0;
+        });
+
+    const selected = selectedId ? SCORED_FEATURES.find(f => f.id === selectedId) : null;
+
+    const ScoreBar = ({ value, max = 10, color }) => (
+        <div className="flex items-center gap-2">
+            <div className="flex-1 h-1 rounded-full bg-[#111435] overflow-hidden">
+                <div className="h-full rounded-full transition-all" style={{ width: `${(value / max) * 100}%`, background: color }} />
+            </div>
+            <span className="text-xs font-mono text-[#B0B8D0] w-5 text-right">{value}</span>
+        </div>
+    );
+
+    const EffortDots = ({ effort }) => (
+        <div className="flex items-center gap-0.5">
+            {[1,2,3,4,5,6,7,8,9,10].map(i => (
+                <span key={i} className="w-1.5 h-1.5 rounded-full"
+                    style={{ background: i <= effort ? (effort <= 3 ? '#34ffbd' : effort <= 6 ? '#ffd040' : '#ff6b84') : '#1A2448' }} />
+            ))}
+        </div>
+    );
+
+    const winLossColor = { high: '#ff6b84', medium: '#ffd040', low: '#48527A' };
+
+    return (
+        <div className="flex-1 flex min-h-0">
+            {/* Main list */}
+            <div className={`flex-1 overflow-y-auto fade-in ${selected ? 'border-r border-[#1A2448]' : ''}`}>
+                <div className="px-6 py-5 space-y-4">
+                    {/* Header */}
+                    <div className="flex items-start justify-between">
+                        <div>
+                            <div className="flex items-center gap-2 text-xs text-[#48527A] mb-1">
+                                <span>Priorities</span><span>›</span><span className="text-[#B0B8D0]">Feature Tracker</span>
+                            </div>
+                            <h1 className="text-xl font-bold text-white">Feature Tracker</h1>
+                            <p className="text-[#48527A] text-sm mt-0.5">
+                                {SCORED_FEATURES.length} features ranked by prioritization score
+                                <span className="ml-2 text-[#323860]">· Score = 40% revenue · 35% signal · 25% strategic fit · effort-adjusted</span>
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <select className="bg-[#0D1028] border border-[#2A3560] rounded-lg px-3 py-1.5 text-xs text-[#B0B8D0] focus:outline-none"
+                                    value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+                                <option value="all">All statuses</option>
+                                <option value="backlog">Backlog</option>
+                                <option value="in_progress">In Progress</option>
+                            </select>
+                            <select className="bg-[#0D1028] border border-[#2A3560] rounded-lg px-3 py-1.5 text-xs text-[#B0B8D0] focus:outline-none"
+                                    value={sortBy} onChange={e => setSortBy(e.target.value)}>
+                                <option value="score">Sort: Priority Score</option>
+                                <option value="revenue">Sort: Revenue Weight</option>
+                                <option value="signal">Sort: Signal Frequency</option>
+                                <option value="effort">Sort: Lowest Effort</option>
+                                <option value="arr">Sort: Associated ARR</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    {/* Column headers */}
+                    <div className="grid gap-3" style={{gridTemplateColumns:'2rem 1fr 7rem 7rem 7rem 5rem 5rem'}}>
+                        <div className="text-xs text-[#323860] uppercase tracking-wider text-center">#</div>
+                        <div className="text-xs text-[#323860] uppercase tracking-wider">Feature</div>
+                        <div className="text-xs text-[#323860] uppercase tracking-wider">Revenue</div>
+                        <div className="text-xs text-[#323860] uppercase tracking-wider">Signal</div>
+                        <div className="text-xs text-[#323860] uppercase tracking-wider">Strategic</div>
+                        <div className="text-xs text-[#323860] uppercase tracking-wider">Effort</div>
+                        <div className="text-xs text-[#323860] uppercase tracking-wider text-right">Score</div>
+                    </div>
+
+                    {/* Feature rows */}
+                    <div className="space-y-1.5">
+                        {sorted.map((f, idx) => {
+                            const isSelected = selectedId === f.id;
+                            const scoreColor = f.score >= 8 ? '#34ffbd' : f.score >= 6 ? '#a5b4fc' : f.score >= 4 ? '#ffd040' : '#48527A';
+                            return (
+                                <div key={f.id}
+                                    onClick={() => setSelectedId(isSelected ? null : f.id)}
+                                    className={`grid gap-3 items-center px-3 py-3 rounded-xl border cursor-pointer transition-all ${isSelected ? 'border-[rgba(165,180,252,0.4)] bg-[rgba(165,180,252,0.07)]' : 'border-[#1A2448] bg-[#0D1028] hover:border-[#2A3560] hover:bg-[#0F122E]'}`}
+                                    style={{gridTemplateColumns:'2rem 1fr 7rem 7rem 7rem 5rem 5rem'}}>
+
+                                    {/* Rank */}
+                                    <div className="text-center">
+                                        <span className="text-xs font-mono text-[#48527A]">#{f.rank}</span>
+                                    </div>
+
+                                    {/* Title + meta */}
+                                    <div className="min-w-0">
+                                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                            <span className="text-sm font-medium text-[#E8ECF8] truncate">{f.title}</span>
+                                            <StatusBadge status={f.status} />
+                                            {f.competitorHas.length > 0 && (
+                                                <span className="text-xs px-1.5 py-0.5 rounded bg-[rgba(255,107,132,0.1)] text-[#ff6b84] border border-[rgba(255,107,132,0.2)]">
+                                                    {f.competitorHas.length} competitor{f.competitorHas.length>1?'s':''} have this
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <SourceTag source={f.source} sourceId={f.sourceId} />
+                                            <span className="text-xs text-[#323860]">{f.requestCount} requests</span>
+                                            <span className="text-xs text-[#323860]">${(f.associatedARR/1000).toFixed(0)}k ARR</span>
+                                            <span className="text-xs font-medium" style={{color: winLossColor[f.winLossImpact]}}>
+                                                {f.winLossImpact} win/loss impact
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Revenue */}
+                                    <ScoreBar value={f.revenueWeight} color="#34ffbd" />
+
+                                    {/* Signal */}
+                                    <ScoreBar value={f.signalFrequency} color="#67e8f9" />
+
+                                    {/* Strategic */}
+                                    <ScoreBar value={f.strategicFit} color="#a5b4fc" />
+
+                                    {/* Effort */}
+                                    <EffortDots effort={f.effort} />
+
+                                    {/* Score */}
+                                    <div className="text-right">
+                                        <span className="text-lg font-bold font-mono" style={{color: scoreColor}}>{f.score}</span>
+                                        <div className="text-xs text-[#323860]">{f.confidence}% conf</div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    {/* Methodology footnote */}
+                    <div className="bg-[rgba(165,180,252,0.05)] border border-[rgba(165,180,252,0.12)] rounded-xl p-4 mt-2">
+                        <div className="text-xs font-medium text-[#a5b4fc] mb-2">Scoring Methodology</div>
+                        <div className="grid grid-cols-3 gap-4 text-xs text-[#48527A]">
+                            <div>
+                                <span className="text-[#34ffbd] font-medium">Revenue Weight (40%)</span>
+                                <p className="mt-0.5 leading-relaxed">ARR exposure of requesting accounts + deal stage weighting + historical correlation to closed-won deals.</p>
+                            </div>
+                            <div>
+                                <span className="text-[#67e8f9] font-medium">Signal Frequency (35%)</span>
+                                <p className="mt-0.5 leading-relaxed">Frequency of feature mentions across call transcripts, support tickets, NPS surveys, and Slack signals — normalized per account.</p>
+                            </div>
+                            <div>
+                                <span className="text-[#a5b4fc] font-medium">Strategic Fit (25%)</span>
+                                <p className="mt-0.5 leading-relaxed">Alignment with defined product pillars, differentiation from competitors, and long-term platform leverage score.</p>
+                            </div>
+                        </div>
+                        <div className="mt-3 pt-3 border-t border-[rgba(165,180,252,0.1)] text-xs text-[#323860]">
+                            Effort penalty applied: each point above 5 subtracts 0.08 from the weighted score. Final score clipped to 0–10.
+                            Confidence % reflects data completeness and signal recency.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Detail panel */}
+            {selected && (
+                <div className="w-80 flex-shrink-0 overflow-y-auto bg-[#08091F] p-5 space-y-4 fade-in">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs text-[#48527A] uppercase tracking-wider">Feature Detail</span>
+                        <button onClick={() => setSelectedId(null)} className="text-[#48527A] hover:text-[#B0B8D0] transition-colors">
+                            <Icon name="x" size={14} color="currentColor" />
+                        </button>
+                    </div>
+
+                    <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="text-xs font-mono text-[#a5b4fc]">#{selected.rank}</span>
+                            <StatusBadge status={selected.status} />
+                        </div>
+                        <h2 className="text-sm font-semibold text-white leading-snug mb-1">{selected.title}</h2>
+                        <p className="text-xs text-[#7A84A8] leading-relaxed">{selected.description}</p>
+                    </div>
+
+                    {/* Score breakdown */}
+                    <div className="bg-[#0D1028] border border-[#1A2448] rounded-xl p-3 space-y-2.5">
+                        <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs text-[#48527A]">Priority Score</span>
+                            <span className="text-xl font-bold font-mono" style={{color: selected.score >= 8 ? '#34ffbd' : selected.score >= 6 ? '#a5b4fc' : '#ffd040'}}>
+                                {selected.score}
+                            </span>
+                        </div>
+                        {[
+                            { label: 'Revenue Weight', value: selected.revenueWeight, weight: '40%', color: '#34ffbd' },
+                            { label: 'Signal Frequency', value: selected.signalFrequency, weight: '35%', color: '#67e8f9' },
+                            { label: 'Strategic Fit', value: selected.strategicFit, weight: '25%', color: '#a5b4fc' },
+                        ].map(dim => (
+                            <div key={dim.label}>
+                                <div className="flex items-center justify-between text-xs mb-1">
+                                    <span className="text-[#7A84A8]">{dim.label}</span>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[#323860]">{dim.weight}</span>
+                                        <span className="font-mono font-medium" style={{color: dim.color}}>{dim.value}</span>
+                                    </div>
+                                </div>
+                                <div className="h-1 rounded-full bg-[#1A2448] overflow-hidden">
+                                    <div className="h-full rounded-full" style={{width:`${(dim.value/10)*100}%`, background: dim.color}} />
+                                </div>
+                            </div>
+                        ))}
+                        <div className="flex items-center justify-between text-xs pt-1 border-t border-[#1A2448]">
+                            <span className="text-[#7A84A8]">Effort</span>
+                            <div className="flex items-center gap-1.5">
+                                <div className="flex gap-0.5">
+                                    {[1,2,3,4,5,6,7,8,9,10].map(i => (
+                                        <span key={i} className="w-1.5 h-1.5 rounded-full"
+                                            style={{background: i <= selected.effort ? (selected.effort<=3?'#34ffbd':selected.effort<=6?'#ffd040':'#ff6b84') : '#1A2448'}} />
+                                    ))}
+                                </div>
+                                <span className="font-mono" style={{color: selected.effort<=3?'#34ffbd':selected.effort<=6?'#ffd040':'#ff6b84'}}>{selected.effort}/10</span>
+                            </div>
+                        </div>
+                        <div className="flex items-center justify-between text-xs">
+                            <span className="text-[#7A84A8]">Confidence</span>
+                            <span className="font-mono text-[#B0B8D0]">{selected.confidence}%</span>
+                        </div>
+                    </div>
+
+                    {/* Business signals */}
+                    <div className="space-y-2">
+                        <div className="text-xs text-[#48527A] uppercase tracking-wider">Business Signals</div>
+                        <div className="grid grid-cols-2 gap-2">
+                            <div className="bg-[#0D1028] border border-[#1A2448] rounded-lg p-2.5">
+                                <div className="text-xs text-[#48527A] mb-0.5">Requests</div>
+                                <div className="text-lg font-bold text-white">{selected.requestCount}</div>
+                            </div>
+                            <div className="bg-[#0D1028] border border-[#1A2448] rounded-lg p-2.5">
+                                <div className="text-xs text-[#48527A] mb-0.5">Associated ARR</div>
+                                <div className="text-lg font-bold text-white">${(selected.associatedARR/1000).toFixed(0)}k</div>
+                            </div>
+                        </div>
+                        <div className="bg-[#0D1028] border border-[#1A2448] rounded-lg p-2.5">
+                            <div className="text-xs text-[#48527A] mb-1">Win / Loss Impact</div>
+                            <span className="text-xs font-medium capitalize" style={{color: winLossColor[selected.winLossImpact]}}>
+                                {selected.winLossImpact} impact
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Requested by */}
+                    <div className="space-y-2">
+                        <div className="text-xs text-[#48527A] uppercase tracking-wider">Requested By</div>
+                        <div className="space-y-1">
+                            {selected.requestedBy.map((r, i) => (
+                                <div key={i} className="text-xs text-[#7A84A8] flex items-center gap-1.5">
+                                    <span className="w-1 h-1 rounded-full bg-[#2A3560] flex-shrink-0" />
+                                    {r}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Competitors */}
+                    {selected.competitorHas.length > 0 && (
+                        <div className="space-y-2">
+                            <div className="text-xs text-[#48527A] uppercase tracking-wider">Competitor Parity</div>
+                            <div className="flex items-center gap-1.5 text-xs text-[#ff6b84]">
+                                <Icon name="warning" size={12} color="#ff6b84" />
+                                {selected.competitorHas.length} competitor{selected.competitorHas.length>1?'s have':' has'} this feature
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Notes */}
+                    {selected.notes && (
+                        <div className="space-y-2">
+                            <div className="text-xs text-[#48527A] uppercase tracking-wider">Notes</div>
+                            <p className="text-xs text-[#7A84A8] leading-relaxed italic">"{selected.notes}"</p>
+                        </div>
+                    )}
+
+                    {/* Tags */}
+                    <div className="flex flex-wrap gap-1.5">
+                        {selected.tags.map(t => (
+                            <span key={t} className="text-xs px-2 py-0.5 bg-[#111435] text-[#48527A] rounded">{t}</span>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+
+// ─── Value vs Effort Matrix ────────────────────────────────────────────────────
+
+const ValueEffortMatrix = () => {
+    const [hoveredId, setHoveredId] = useState(null);
+    const [selectedId, setSelectedId] = useState(null);
+
+    // Value = weighted average of revenue + signal + strategic (same weights as score, ignoring effort)
+    const features = SCORED_FEATURES.map(f => ({
+        ...f,
+        value: Math.round(((f.revenueWeight * 0.40) + (f.signalFrequency * 0.35) + (f.strategicFit * 0.25)) * 10) / 10,
+    }));
+
+    const hovered  = hoveredId  ? features.find(f => f.id === hoveredId)  : null;
+    const selected = selectedId ? features.find(f => f.id === selectedId) : null;
+    const active   = hovered || selected;
+
+    // Plot area: effort on X (1=left, 10=right), value on Y (10=top, 1=bottom)
+    // Map to % positions inside the grid
+    const toX = (effort) => ((effort - 1) / 9) * 100;
+    const toY = (value)  => (1 - (value - 5) / 5) * 100; // value 5–10 mapped to 0–100%
+
+    const quadrantColor = (f) => {
+        const x = f.effort;
+        const y = f.value;
+        if (y >= 7.5 && x <= 5) return '#34ffbd'; // High value, low effort → Do Now
+        if (y >= 7.5 && x >  5) return '#a5b4fc'; // High value, high effort → Strategic
+        if (y <  7.5 && x <= 5) return '#ffd040'; // Low value, low effort → Fill-in
+        return '#ff6b84';                           // Low value, high effort → Avoid
+    };
+
+    const quadrantLabel = (f) => {
+        if (f.value >= 7.5 && f.effort <= 5) return 'Do Now';
+        if (f.value >= 7.5 && f.effort >  5) return 'Strategic';
+        if (f.value <  7.5 && f.effort <= 5) return 'Fill-in';
+        return 'Avoid';
+    };
+
+    return (
+        <div className="flex-1 overflow-y-auto fade-in">
+            <div className="px-6 py-5 space-y-5">
+                {/* Header */}
+                <div>
+                    <div className="flex items-center gap-2 text-xs text-[#48527A] mb-1">
+                        <span>Priorities</span><span>›</span><span className="text-[#B0B8D0]">Value vs Effort</span>
+                    </div>
+                    <h1 className="text-xl font-bold text-white">Value vs Effort Matrix</h1>
+                    <p className="text-[#48527A] text-sm mt-0.5">Plot features by composite value score against build effort. Hover or click a dot for detail.</p>
+                </div>
+
+                {/* Legend */}
+                <div className="flex items-center gap-5">
+                    {[
+                        { label: 'Do Now', color: '#34ffbd', desc: 'High value · Low effort' },
+                        { label: 'Strategic', color: '#a5b4fc', desc: 'High value · High effort' },
+                        { label: 'Fill-in', color: '#ffd040', desc: 'Low value · Low effort' },
+                        { label: 'Avoid', color: '#ff6b84', desc: 'Low value · High effort' },
+                    ].map(q => (
+                        <div key={q.label} className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{background: q.color}} />
+                            <div>
+                                <span className="text-xs font-medium" style={{color: q.color}}>{q.label}</span>
+                                <span className="text-xs text-[#323860] ml-1.5">{q.desc}</span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Matrix + detail side by side */}
+                <div className="flex gap-4 items-start">
+                    {/* Matrix */}
+                    <div className="flex-1 min-w-0">
+                        <div className="relative bg-[#0D1028] border border-[#1A2448] rounded-xl overflow-hidden" style={{aspectRatio:'1.6/1', minHeight:380}}>
+                            {/* Quadrant backgrounds */}
+                            <div className="absolute inset-0 grid" style={{gridTemplateColumns:'50% 50%', gridTemplateRows:'50% 50%'}}>
+                                <div className="bg-[rgba(52,255,189,0.03)] border-r border-b border-[#1A2448]" />
+                                <div className="bg-[rgba(165,180,252,0.03)] border-b border-[#1A2448]" />
+                                <div className="bg-[rgba(255,208,64,0.03)] border-r border-[#1A2448]" />
+                                <div className="bg-[rgba(255,107,132,0.03)]" />
+                            </div>
+
+                            {/* Quadrant labels */}
+                            <div className="absolute top-3 left-3 text-xs font-medium text-[#34ffbd] opacity-40 uppercase tracking-wider">Do Now</div>
+                            <div className="absolute top-3 right-3 text-xs font-medium text-[#a5b4fc] opacity-40 uppercase tracking-wider text-right">Strategic</div>
+                            <div className="absolute bottom-3 left-3 text-xs font-medium text-[#ffd040] opacity-40 uppercase tracking-wider">Fill-in</div>
+                            <div className="absolute bottom-3 right-3 text-xs font-medium text-[#ff6b84] opacity-40 uppercase tracking-wider text-right">Avoid</div>
+
+                            {/* Axis labels */}
+                            <div className="absolute bottom-0 left-0 right-0 flex justify-between px-4 pb-1">
+                                <span className="text-xs text-[#323860]">Low Effort</span>
+                                <span className="text-xs text-[#48527A] font-medium">← Effort →</span>
+                                <span className="text-xs text-[#323860]">High Effort</span>
+                            </div>
+                            <div className="absolute top-0 bottom-0 left-0 flex flex-col justify-between py-4 pl-1">
+                                <span className="text-xs text-[#323860]" style={{writingMode:'vertical-rl',transform:'rotate(180deg)'}}>High Value</span>
+                                <span className="text-xs text-[#323860]" style={{writingMode:'vertical-rl',transform:'rotate(180deg)'}}>Low Value</span>
+                            </div>
+
+                            {/* Plot area */}
+                            <div className="absolute inset-0 mx-8 mb-6 mt-2">
+                                {features.map(f => {
+                                    const x = toX(f.effort);
+                                    const y = toY(f.value);
+                                    const color = quadrantColor(f);
+                                    const isActive = hoveredId === f.id || selectedId === f.id;
+                                    return (
+                                        <div key={f.id}
+                                            className="absolute cursor-pointer transition-transform"
+                                            style={{
+                                                left: `${x}%`,
+                                                top: `${Math.max(5, Math.min(92, y))}%`,
+                                                transform: `translate(-50%, -50%) scale(${isActive ? 1.8 : 1})`,
+                                                zIndex: isActive ? 10 : 1,
+                                            }}
+                                            onMouseEnter={() => setHoveredId(f.id)}
+                                            onMouseLeave={() => setHoveredId(null)}
+                                            onClick={() => setSelectedId(selectedId === f.id ? null : f.id)}>
+                                            <div className="w-3 h-3 rounded-full transition-all"
+                                                style={{
+                                                    background: color,
+                                                    boxShadow: isActive ? `0 0 0 2px ${color}40, 0 0 8px ${color}60` : `0 0 4px ${color}60`,
+                                                    opacity: hoveredId && hoveredId !== f.id ? 0.35 : 1,
+                                                }} />
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Hover / click detail */}
+                    <div className="w-72 flex-shrink-0">
+                        {active ? (
+                            <div className="bg-[#0D1028] border border-[#1A2448] rounded-xl p-4 space-y-3 fade-in">
+                                <div className="flex items-center gap-2">
+                                    <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{background: quadrantColor(active)}} />
+                                    <span className="text-xs font-medium uppercase tracking-wider" style={{color: quadrantColor(active)}}>{quadrantLabel(active)}</span>
+                                </div>
+                                <div>
+                                    <div className="text-sm font-semibold text-white mb-1">{active.title}</div>
+                                    <p className="text-xs text-[#7A84A8] leading-relaxed">{active.description}</p>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 text-xs">
+                                    <div className="bg-[#090B1E] rounded-lg p-2">
+                                        <div className="text-[#48527A] mb-0.5">Value Score</div>
+                                        <div className="text-base font-bold font-mono" style={{color: quadrantColor(active)}}>{active.value}</div>
+                                    </div>
+                                    <div className="bg-[#090B1E] rounded-lg p-2">
+                                        <div className="text-[#48527A] mb-0.5">Effort</div>
+                                        <div className="text-base font-bold font-mono" style={{color: active.effort<=3?'#34ffbd':active.effort<=6?'#ffd040':'#ff6b84'}}>{active.effort}/10</div>
+                                    </div>
+                                    <div className="bg-[#090B1E] rounded-lg p-2">
+                                        <div className="text-[#48527A] mb-0.5">Priority Score</div>
+                                        <div className="text-base font-bold font-mono text-white">{active.score}</div>
+                                    </div>
+                                    <div className="bg-[#090B1E] rounded-lg p-2">
+                                        <div className="text-[#48527A] mb-0.5">Rank</div>
+                                        <div className="text-base font-bold font-mono text-white">#{active.rank}</div>
+                                    </div>
+                                </div>
+                                <div className="flex items-center justify-between text-xs">
+                                    <span className="text-[#48527A]">{active.requestCount} requests</span>
+                                    <span className="text-[#B0B8D0]">${(active.associatedARR/1000).toFixed(0)}k ARR</span>
+                                    <StatusBadge status={active.status} />
+                                </div>
+                                {active.notes && (
+                                    <p className="text-xs text-[#7A84A8] italic border-t border-[#1A2448] pt-2">"{active.notes}"</p>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="bg-[#0D1028] border border-[#1A2448] rounded-xl p-4 h-full flex flex-col gap-3">
+                                <div className="text-xs text-[#48527A] uppercase tracking-wider">Quadrant Summary</div>
+                                {[
+                                    { label: 'Do Now', color: '#34ffbd', desc: 'High value, low effort', key: (f) => f.value >= 7.5 && f.effort <= 5 },
+                                    { label: 'Strategic', color: '#a5b4fc', desc: 'High value, high effort', key: (f) => f.value >= 7.5 && f.effort > 5 },
+                                    { label: 'Fill-in', color: '#ffd040', desc: 'Low value, low effort', key: (f) => f.value < 7.5 && f.effort <= 5 },
+                                    { label: 'Avoid', color: '#ff6b84', desc: 'Low value, high effort', key: (f) => f.value < 7.5 && f.effort > 5 },
+                                ].map(q => {
+                                    const items = features.filter(q.key);
+                                    return (
+                                        <div key={q.label} className="flex items-center gap-3">
+                                            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{background: q.color}} />
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-xs font-medium" style={{color: q.color}}>{q.label}</span>
+                                                    <span className="text-xs font-bold text-white">{items.length}</span>
+                                                </div>
+                                                <div className="text-xs text-[#323860]">{q.desc}</div>
+                                                {items.length > 0 && (
+                                                    <div className="text-xs text-[#48527A] truncate mt-0.5">{items.map(f=>f.title.split(' ').slice(0,3).join(' ')).join(', ')}</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                                <p className="text-xs text-[#323860] mt-auto">Hover or click a dot to see feature detail</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Bottom: ranked list for this view */}
+                <div className="bg-[#0D1028] border border-[#1A2448] rounded-xl p-4 space-y-3">
+                    <div className="text-sm font-medium text-white">All Features by Quadrant</div>
+                    <div className="grid grid-cols-2 gap-4">
+                        {[
+                            { label: 'Do Now', color: '#34ffbd', filter: (f) => f.value >= 7.5 && f.effort <= 5 },
+                            { label: 'Strategic', color: '#a5b4fc', filter: (f) => f.value >= 7.5 && f.effort > 5 },
+                            { label: 'Fill-in', color: '#ffd040', filter: (f) => f.value < 7.5 && f.effort <= 5 },
+                            { label: 'Avoid', color: '#ff6b84', filter: (f) => f.value < 7.5 && f.effort > 5 },
+                        ].map(q => {
+                            const items = features.filter(q.filter).sort((a,b) => b.score - a.score);
+                            if (items.length === 0) return null;
+                            return (
+                                <div key={q.label} className="space-y-1.5">
+                                    <div className="flex items-center gap-1.5 mb-2">
+                                        <span className="w-2 h-2 rounded-full" style={{background: q.color}} />
+                                        <span className="text-xs font-medium uppercase tracking-wider" style={{color: q.color}}>{q.label}</span>
+                                        <span className="text-xs text-[#323860]">({items.length})</span>
+                                    </div>
+                                    {items.map(f => (
+                                        <div key={f.id} className="flex items-center gap-2 py-1.5 px-2 rounded-lg hover:bg-[#111435] cursor-pointer transition-colors"
+                                            onClick={() => setSelectedId(selectedId === f.id ? null : f.id)}>
+                                            <span className="text-xs font-mono text-[#48527A] w-5">#{f.rank}</span>
+                                            <span className="flex-1 text-xs text-[#B0B8D0] truncate">{f.title}</span>
+                                            <span className="text-xs font-bold font-mono" style={{color: q.color}}>{f.score}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
 // ─── App Shell ────────────────────────────────────────────────────────────────
 // Placeholder component for modules not yet built
 const ComingSoonModule = ({ module }) => (
@@ -4504,7 +5271,8 @@ const App = () => {
                         </>
                     )}
                     {module === 'settings' && <SettingsModule />}
-                    {module !== 'insights' && module !== 'roadmap' && module !== 'settings' && <ComingSoonModule module={activeModule} />}
+                    {module === 'priorities' && <PrioritiesModule />}
+                    {module !== 'insights' && module !== 'roadmap' && module !== 'settings' && module !== 'priorities' && <ComingSoonModule module={activeModule} />}
                 </div>
             </div>
         </div>
