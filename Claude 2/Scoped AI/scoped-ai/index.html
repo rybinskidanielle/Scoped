@@ -4195,6 +4195,8 @@ const SettingsConnections = () => {
 
 
 // ─── Priorities Mock Data ─────────────────────────────────────────────────────
+// TODAY reference for urgency scoring
+const TODAY = new Date('2026-03-10');
 
 const MOCK_FEATURES = [
     {
@@ -4204,19 +4206,35 @@ const MOCK_FEATURES = [
         tags: ['ai', 'crm', 'revenue'],
         source: 'jira', sourceId: 'ENG-501',
         status: 'backlog',
-        // Scoring dimensions (0–10)
-        revenueWeight: 9.2,        // ARR impact / deals influenced
-        signalFrequency: 8.7,      // How often customers ask for this
-        strategicFit: 9.0,         // Alignment with product vision
-        effort: 8,                 // Dev effort (higher = harder)
-        confidence: 85,            // % confidence in estimates
-        // Derived
+        // --- Scoring inputs ---
+        estimatedARR: 420000,
         requestCount: 34,
-        associatedARR: 420000,
-        competitorHas: ['c1','c2'],
+        strategicFit: 9.0,       // 1–10
+        effort: 8,               // 1–10, used as divisor
+        impactType: ['revenue', 'retention'],
+        metricsDriven: ['ARR', 'Win Rate', 'NRR'],
+        // --- Deal context ---
+        deals: [
+            { name: 'Meridian Health', stage: 'negotiation', arr: 120000 },
+            { name: 'Volta Energy', stage: 'proposal', arr: 85000 },
+            { name: 'Acme Corp', stage: 'discovery', arr: 60000 },
+        ],
+        deadline: null,
+        deadlineReason: null,
+        // --- Dependencies ---
+        unlocks: ['f9'],   // CRM sync becomes far more valuable with risk scores
+        blockedBy: [],
+        // --- Signals ---
+        requestedBy: [
+            { account: 'Meridian Health', source: 'call', note: 'Asked in 3 discovery calls' },
+            { account: 'Volta Energy', source: 'email', note: 'Follow-up after demo' },
+            { account: 'Acme Corp', source: 'slack', note: 'CS channel request' },
+            { account: '31 other accounts', source: 'call', note: 'Via NPS + onboarding surveys' },
+        ],
+        competitorHas: ['c1', 'c2'],
         winLossImpact: 'high',
-        requestedBy: ['Acme Corp', 'Meridian Health', 'Volta Energy', '+31 more'],
-        notes: 'Requested in every enterprise discovery call in Q1.',
+        confidence: 85,
+        notes: 'Requested in every enterprise discovery call in Q1. Salesforce integration amplifies this.',
     },
     {
         id: 'f2',
@@ -4225,36 +4243,56 @@ const MOCK_FEATURES = [
         tags: ['integrations', 'notifications'],
         source: 'linear', sourceId: 'LIN-102',
         status: 'backlog',
-        revenueWeight: 7.4,
-        signalFrequency: 9.1,
+        estimatedARR: 185000,
+        requestCount: 51,
         strategicFit: 7.8,
         effort: 3,
-        confidence: 92,
-        requestCount: 51,
-        associatedARR: 185000,
+        impactType: ['usage', 'retention'],
+        metricsDriven: ['DAU', 'NRR', 'Activation'],
+        deals: [
+            { name: 'Novo Labs', stage: 'closed_won', arr: 48000 },
+        ],
+        deadline: null,
+        deadlineReason: null,
+        unlocks: [],
+        blockedBy: [],
+        requestedBy: [
+            { account: 'Novo Labs', source: 'slack', note: 'Requested before signing' },
+            { account: 'Pulse Retail', source: 'call', note: 'QBR ask' },
+            { account: '49 other accounts', source: 'email', note: 'Most common onboarding feedback' },
+        ],
         competitorHas: ['c2'],
         winLossImpact: 'medium',
-        requestedBy: ['Novo Labs', 'Pulse Retail', '+49 more'],
-        notes: 'Highest raw request count. Low effort makes this a quick win.',
+        confidence: 92,
+        notes: 'Highest raw request count of any feature. Low effort = immediate quick win.',
     },
     {
         id: 'f3',
         title: 'Custom Scoring Weights per Workspace',
-        description: 'Let PMs define their own weighting formula for the prioritization score — adjusting revenue, signal, and strategic fit levers.',
+        description: 'Let PMs define their own weighting formula for the prioritization score — adjusting each dimension independently.',
         tags: ['product', 'configuration'],
         source: 'asana', sourceId: 'PROD-201',
         status: 'backlog',
-        revenueWeight: 6.1,
-        signalFrequency: 5.4,
+        estimatedARR: 95000,
+        requestCount: 18,
         strategicFit: 8.5,
         effort: 4,
-        confidence: 78,
-        requestCount: 18,
-        associatedARR: 95000,
+        impactType: ['new_market', 'retention'],
+        metricsDriven: ['Expansion ARR', 'Feature Adoption'],
+        deals: [],
+        deadline: null,
+        deadlineReason: null,
+        unlocks: [],
+        blockedBy: [],
+        requestedBy: [
+            { account: 'Meridian Health', source: 'call', note: 'VP Product requested in business review' },
+            { account: 'Orbit SaaS', source: 'email', note: 'Power user feedback thread' },
+            { account: '16 other accounts', source: 'slack', note: 'Feature request channel' },
+        ],
         competitorHas: [],
         winLossImpact: 'low',
-        requestedBy: ['Meridian Health', 'Orbit SaaS', '+16 more'],
-        notes: 'Strong ask from power users. Differentiates from rigid competitors.',
+        confidence: 78,
+        notes: 'Strong signal from power users. Differentiates from competitors with rigid models.',
     },
     {
         id: 'f4',
@@ -4263,17 +4301,31 @@ const MOCK_FEATURES = [
         tags: ['integrations', 'salesforce', 'enterprise'],
         source: 'jira', sourceId: 'ENG-488',
         status: 'backlog',
-        revenueWeight: 8.8,
-        signalFrequency: 7.2,
+        estimatedARR: 310000,
+        requestCount: 27,
         strategicFit: 8.2,
         effort: 7,
-        confidence: 70,
-        requestCount: 27,
-        associatedARR: 310000,
-        competitorHas: ['c1','c3'],
+        impactType: ['revenue', 'market_expansion'],
+        metricsDriven: ['ARR', 'Win Rate', 'Time to Close'],
+        deals: [
+            { name: 'Vantage Global', stage: 'negotiation', arr: 140000 },
+            { name: 'Summit RE', stage: 'negotiation', arr: 95000 },
+            { name: 'Cascade Ventures', stage: 'proposal', arr: 75000 },
+        ],
+        deadline: '2026-04-15',
+        deadlineReason: 'Vantage Global pilot contract decision — SF sync is a stated requirement',
+        unlocks: ['f1'],   // risk scoring is much stronger once CRM data flows both ways
+        blockedBy: [],
+        requestedBy: [
+            { account: 'Vantage Global', source: 'call', note: 'Deal blocker — stated in procurement call' },
+            { account: 'Summit RE', source: 'email', note: 'Follow-up from technical evaluation' },
+            { account: 'Cascade Ventures', source: 'call', note: 'Asked during proposal walkthrough' },
+            { account: '24 other accounts', source: 'call', note: 'Consistent enterprise discovery ask' },
+        ],
+        competitorHas: ['c1', 'c3'],
         winLossImpact: 'high',
-        requestedBy: ['Vantage Global', 'Summit RE', '+25 more'],
-        notes: 'Blocker for 3 enterprise deals currently in late-stage negotiation.',
+        confidence: 70,
+        notes: 'Hard deadline tied to 3 active late-stage deals worth $310k combined ARR.',
     },
     {
         id: 'f5',
@@ -4282,17 +4334,28 @@ const MOCK_FEATURES = [
         tags: ['insights', 'competitive'],
         source: 'linear', sourceId: 'LIN-98',
         status: 'in_progress',
-        revenueWeight: 6.8,
-        signalFrequency: 7.9,
+        estimatedARR: 140000,
+        requestCount: 29,
         strategicFit: 9.1,
         effort: 5,
-        confidence: 88,
-        requestCount: 29,
-        associatedARR: 140000,
+        impactType: ['revenue', 'market_expansion'],
+        metricsDriven: ['Win Rate', 'Sales Cycle Length'],
+        deals: [
+            { name: 'Lumio', stage: 'proposal', arr: 55000 },
+        ],
+        deadline: null,
+        deadlineReason: null,
+        unlocks: [],
+        blockedBy: [],
+        requestedBy: [
+            { account: 'Cascade Ventures', source: 'call', note: 'AE requested for competitive battlecard' },
+            { account: 'Lumio', source: 'slack', note: 'CS escalation' },
+            { account: '27 other accounts', source: 'email', note: 'Sales team survey' },
+        ],
         competitorHas: ['c1'],
         winLossImpact: 'medium',
-        requestedBy: ['Cascade Ventures', 'Lumio', '+27 more'],
-        notes: 'Sales team using manual spreadsheets today — this replaces that.',
+        confidence: 88,
+        notes: 'Sales currently maintain a manual Notion table. This automates and supersedes it.',
     },
     {
         id: 'f6',
@@ -4301,17 +4364,25 @@ const MOCK_FEATURES = [
         tags: ['mobile', 'notifications'],
         source: 'asana', sourceId: 'PROD-178',
         status: 'backlog',
-        revenueWeight: 4.2,
-        signalFrequency: 4.8,
+        estimatedARR: 60000,
+        requestCount: 14,
         strategicFit: 5.5,
         effort: 6,
-        confidence: 65,
-        requestCount: 14,
-        associatedARR: 60000,
-        competitorHas: ['c2','c3'],
+        impactType: ['usage'],
+        metricsDriven: ['DAU', 'Alert Open Rate'],
+        deals: [],
+        deadline: null,
+        deadlineReason: null,
+        unlocks: [],
+        blockedBy: [],
+        requestedBy: [
+            { account: 'Vantage Global (field reps)', source: 'slack', note: 'Informal request from 3 AEs' },
+            { account: '13 other accounts', source: 'email', note: 'Low-priority feedback form responses' },
+        ],
+        competitorHas: ['c2', 'c3'],
         winLossImpact: 'low',
-        requestedBy: ['Field reps at Vantage', '+13 more'],
-        notes: 'Niche use case. Low signal frequency suggests limited demand.',
+        confidence: 65,
+        notes: 'Niche use case for field sales. Low signal frequency across the broader customer base.',
     },
     {
         id: 'f7',
@@ -4320,36 +4391,56 @@ const MOCK_FEATURES = [
         tags: ['ai', 'signals', 'revenue'],
         source: 'jira', sourceId: 'ENG-512',
         status: 'backlog',
-        revenueWeight: 8.5,
-        signalFrequency: 6.3,
+        estimatedARR: 275000,
+        requestCount: 22,
         strategicFit: 9.3,
         effort: 9,
-        confidence: 60,
-        requestCount: 22,
-        associatedARR: 275000,
+        impactType: ['revenue', 'new_market'],
+        metricsDriven: ['Pipeline Created', 'ARR', 'Win Rate'],
+        deals: [
+            { name: 'Orbit SaaS', stage: 'proposal', arr: 90000 },
+            { name: 'Meridian Health', stage: 'discovery', arr: 60000 },
+        ],
+        deadline: null,
+        deadlineReason: null,
+        unlocks: ['f1', 'f4', 'f9'],  // unlocks risk scoring, CRM enrichment, and HubSpot integration
+        blockedBy: [],
+        requestedBy: [
+            { account: 'Orbit SaaS', source: 'call', note: 'Top request in renewal discussion' },
+            { account: 'Meridian Health', source: 'email', note: 'VP Sales email thread' },
+            { account: '20 other accounts', source: 'call', note: 'Enterprise discovery interviews' },
+        ],
         competitorHas: ['c1'],
         winLossImpact: 'high',
-        requestedBy: ['Orbit SaaS', 'Meridian Health', '+20 more'],
-        notes: 'High strategic value but significant data partnership complexity.',
+        confidence: 60,
+        notes: 'Highest dependency multiplier — unlocks 3 downstream features. High effort is offset by strategic leverage.',
     },
     {
         id: 'f8',
         title: 'Weekly AI Digest Email — Rewrite',
-        description: 'Redesign the weekly email digest with better signal clustering, executive summary, and one-click deep links to competitor profiles.',
+        description: 'Redesign the weekly email digest with better signal clustering, executive summary, and one-click deep links.',
         tags: ['ai', 'email', 'product'],
         source: 'linear', sourceId: 'LIN-109',
         status: 'backlog',
-        revenueWeight: 5.5,
-        signalFrequency: 6.8,
+        estimatedARR: 90000,
+        requestCount: 31,
         strategicFit: 6.2,
         effort: 3,
-        confidence: 90,
-        requestCount: 31,
-        associatedARR: 90000,
+        impactType: ['retention', 'usage'],
+        metricsDriven: ['NRR', 'Email Open Rate', 'Feature Adoption'],
+        deals: [],
+        deadline: null,
+        deadlineReason: null,
+        unlocks: [],
+        blockedBy: [],
+        requestedBy: [
+            { account: 'Multiple accounts', source: 'email', note: 'NPS survey open-text — most common theme' },
+            { account: '31 accounts', source: 'email', note: 'Customer success feedback digest' },
+        ],
         competitorHas: [],
         winLossImpact: 'low',
-        requestedBy: ['Multiple accounts in NPS survey'],
-        notes: 'Current digest has 34% open rate. Rewrite expected to push to 55%+.',
+        confidence: 90,
+        notes: 'Current digest open rate 34%. Rewrite expected to push above 55% based on A/B test plan.',
     },
     {
         id: 'f9',
@@ -4358,30 +4449,103 @@ const MOCK_FEATURES = [
         tags: ['integrations', 'hubspot', 'enterprise'],
         source: 'asana', sourceId: 'PROD-199',
         status: 'backlog',
-        revenueWeight: 7.9,
-        signalFrequency: 8.2,
+        estimatedARR: 220000,
+        requestCount: 38,
         strategicFit: 7.5,
         effort: 7,
-        confidence: 75,
-        requestCount: 38,
-        associatedARR: 220000,
-        competitorHas: ['c1','c2','c3'],
+        impactType: ['revenue', 'market_expansion'],
+        metricsDriven: ['ARR', 'Win Rate', 'Time to Activate'],
+        deals: [
+            { name: 'Pulse Retail', stage: 'negotiation', arr: 72000 },
+            { name: 'Novo Labs', stage: 'proposal', arr: 48000 },
+        ],
+        deadline: '2026-05-01',
+        deadlineReason: 'Pulse Retail contract renewal — HubSpot sync is a stated condition',
+        unlocks: ['f2'],  // Slack digest becomes more powerful with HubSpot deal data
+        blockedBy: [],
+        requestedBy: [
+            { account: 'Pulse Retail', source: 'call', note: 'Stated requirement in renewal call' },
+            { account: 'Novo Labs', source: 'email', note: 'Onboarding blockers list' },
+            { account: '29 other accounts (HubSpot users)', source: 'email', note: 'Onboarding survey' },
+        ],
+        competitorHas: ['c1', 'c2', 'c3'],
         winLossImpact: 'high',
-        requestedBy: ['29 HubSpot users in onboarding survey'],
-        notes: 'Strongest request from SMB segment. All top competitors have this.',
+        confidence: 75,
+        notes: 'All top competitors have HubSpot. Strongest request from SMB segment.',
     },
 ];
 
-// Compute prioritization score: weighted formula
-// Score = (revenueWeight * 0.40) + (signalFrequency * 0.35) + (strategicFit * 0.25) — then penalize for high effort
-const computeScore = (f) => {
-    const raw = (f.revenueWeight * 0.40) + (f.signalFrequency * 0.35) + (f.strategicFit * 0.25);
-    const effortPenalty = (f.effort - 5) * 0.08; // effort 1-4 gives bonus, 6-10 penalizes
-    return Math.min(10, Math.max(0, raw - effortPenalty));
+// ─── Scoring Engine ────────────────────────────────────────────────────────────
+// All inputs normalized to 1–10 before combining — prevents high-variance
+// inputs (like raw ARR) from dominating. Effort is a divisor. Dependencies
+// are a multiplier. Urgency (deadline) is an additive factor.
+
+// Normalize ARR: log-scaled, $500k → 10
+const normalizeARR = (arr) => {
+    if (!arr || arr <= 0) return 0;
+    return Math.min(10, (Math.log(arr) / Math.log(500000)) * 10);
+};
+
+// Normalize request count: linear, 50+ → 10
+const normalizeRequests = (count) => Math.min(10, (count / 50) * 10);
+
+// Deal score: sum of stage-weighted ARR values, normalized
+const STAGE_WEIGHTS = { negotiation: 1.0, proposal: 0.6, discovery: 0.3, closed_won: 0.4 };
+const normalizeDealScore = (deals) => {
+    if (!deals || deals.length === 0) return 0;
+    const weighted = deals.reduce((sum, d) => sum + (d.arr * (STAGE_WEIGHTS[d.stage] || 0.2)), 0);
+    return Math.min(10, (Math.log(Math.max(weighted, 1)) / Math.log(300000)) * 10);
+};
+
+// Urgency score from deadline
+const urgencyScore = (deadline) => {
+    if (!deadline) return 0;
+    const days = Math.round((new Date(deadline) - TODAY) / (1000 * 60 * 60 * 24));
+    if (days <= 0)  return 10;
+    if (days <= 30) return 10;
+    if (days <= 60) return 7;
+    if (days <= 90) return 5;
+    if (days <= 180) return 3;
+    return 1;
+};
+
+const computeScore = (f, allFeatures) => {
+    // Step 1 — normalize all inputs to same 1–10 scale
+    const arrScore     = normalizeARR(f.estimatedARR);
+    const reqScore     = normalizeRequests(f.requestCount);
+    const dealScore    = normalizeDealScore(f.deals);
+    const urgency      = urgencyScore(f.deadline);
+    const strategic    = f.strategicFit; // already 1–10
+
+    // Step 2 — weighted base (all on same scale)
+    const base = (arrScore  * 0.25)
+               + (reqScore  * 0.20)
+               + (strategic * 0.25)
+               + (dealScore * 0.20)
+               + (urgency   * 0.10);
+
+    // Step 3 — effort as divisor (higher effort = lower score)
+    const effortDivisor = 1 + (f.effort - 1) * 0.08;
+    const adjusted = base / effortDivisor;
+
+    // Step 4 — dependency multiplier (each unlocked feature adds 15%)
+    const multiplier = 1 + (f.unlocks ? f.unlocks.length * 0.15 : 0);
+    const final = adjusted * multiplier;
+
+    return Math.min(10, Math.max(0, final));
 };
 
 const SCORED_FEATURES = MOCK_FEATURES
-    .map(f => ({ ...f, score: Math.round(computeScore(f) * 10) / 10 }))
+    .map(f => ({
+        ...f,
+        score: Math.round(computeScore(f, MOCK_FEATURES) * 10) / 10,
+        // Pre-compute normalized sub-scores for display
+        _arrScore:   Math.round(normalizeARR(f.estimatedARR) * 10) / 10,
+        _reqScore:   Math.round(normalizeRequests(f.requestCount) * 10) / 10,
+        _dealScore:  Math.round(normalizeDealScore(f.deals) * 10) / 10,
+        _urgency:    urgencyScore(f.deadline),
+        _multiplier: Math.round((1 + (f.unlocks ? f.unlocks.length * 0.15 : 0)) * 100) / 100,
+    }))
     .sort((a, b) => b.score - a.score)
     .map((f, i) => ({ ...f, rank: i + 1 }));
 
@@ -4415,6 +4579,68 @@ const PrioritiesModule = () => {
 };
 
 
+// ─── Shared Priorities Helpers ────────────────────────────────────────────────
+
+const SOURCE_ICON = { call: '📞', email: '✉', slack: '💬' };
+const SOURCE_COLOR = { call: '#67e8f9', email: '#a5b4fc', slack: '#34ffbd' };
+
+const ImpactBadge = ({ type }) => {
+    const map = {
+        revenue:          { label: 'Revenue',         color: '#34ffbd' },
+        retention:        { label: 'Retention',       color: '#a5b4fc' },
+        usage:            { label: 'Usage',           color: '#67e8f9' },
+        market_expansion: { label: 'Mkt Expansion',   color: '#ffd040' },
+        cost_reduction:   { label: 'Cost Reduction',  color: '#f9a8d4' },
+        new_market:       { label: 'New Market',      color: '#c4b5fd' },
+    };
+    const m = map[type] || { label: type, color: '#48527A' };
+    return (
+        <span className="text-xs px-1.5 py-0.5 rounded font-medium"
+            style={{ background: m.color + '18', color: m.color, border: `1px solid ${m.color}30` }}>
+            {m.label}
+        </span>
+    );
+};
+
+const DeadlineChip = ({ deadline, reason }) => {
+    if (!deadline) return null;
+    const days = Math.round((new Date(deadline) - TODAY) / (1000 * 60 * 60 * 24));
+    const color = days <= 30 ? '#ff6b84' : days <= 60 ? '#ffd040' : '#67e8f9';
+    const label = days <= 0 ? 'Overdue' : days <= 30 ? `${days}d deadline` : days <= 60 ? `${days}d` : deadline;
+    return (
+        <span className="text-xs font-medium flex items-center gap-1" style={{ color }}
+            title={reason || ''}>
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                <circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.2"/>
+                <path d="M5 3v2.5L6.5 7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+            </svg>
+            {label}
+        </span>
+    );
+};
+
+const StageBadge = ({ stage }) => {
+    const map = {
+        negotiation: { label: 'Negotiation', color: '#ff6b84' },
+        proposal:    { label: 'Proposal',    color: '#ffd040' },
+        discovery:   { label: 'Discovery',   color: '#67e8f9' },
+        closed_won:  { label: 'Closed Won',  color: '#34ffbd' },
+    };
+    const s = map[stage] || { label: stage, color: '#48527A' };
+    return <span className="text-xs font-medium" style={{ color: s.color }}>{s.label}</span>;
+};
+
+const MultiplierBadge = ({ multiplier }) => {
+    if (!multiplier || multiplier <= 1) return null;
+    return (
+        <span className="text-xs font-mono font-bold px-1.5 py-0.5 rounded"
+            style={{ background: 'rgba(196,181,253,0.15)', color: '#c4b5fd', border: '1px solid rgba(196,181,253,0.3)' }}>
+            ×{multiplier.toFixed(2)}
+        </span>
+    );
+};
+
+
 // ─── Feature Tracker View ─────────────────────────────────────────────────────
 
 const FeatureTrackerView = () => {
@@ -4425,11 +4651,12 @@ const FeatureTrackerView = () => {
     const sorted = [...SCORED_FEATURES]
         .filter(f => statusFilter === 'all' || f.status === statusFilter)
         .sort((a, b) => {
-            if (sortBy === 'score')     return b.score - a.score;
-            if (sortBy === 'revenue')   return b.revenueWeight - a.revenueWeight;
-            if (sortBy === 'signal')    return b.signalFrequency - a.signalFrequency;
-            if (sortBy === 'effort')    return a.effort - b.effort; // low effort first
-            if (sortBy === 'arr')       return b.associatedARR - a.associatedARR;
+            if (sortBy === 'score')    return b.score - a.score;
+            if (sortBy === 'arr')      return b.estimatedARR - a.estimatedARR;
+            if (sortBy === 'requests') return b.requestCount - a.requestCount;
+            if (sortBy === 'effort')   return a.effort - b.effort;
+            if (sortBy === 'deals')    return b._dealScore - a._dealScore;
+            if (sortBy === 'urgency')  return b._urgency - a._urgency;
             return 0;
         });
 
@@ -4438,21 +4665,13 @@ const FeatureTrackerView = () => {
     const ScoreBar = ({ value, max = 10, color }) => (
         <div className="flex items-center gap-2">
             <div className="flex-1 h-1 rounded-full bg-[#111435] overflow-hidden">
-                <div className="h-full rounded-full transition-all" style={{ width: `${(value / max) * 100}%`, background: color }} />
+                <div className="h-full rounded-full" style={{ width: `${(value / max) * 100}%`, background: color }} />
             </div>
-            <span className="text-xs font-mono text-[#B0B8D0] w-5 text-right">{value}</span>
+            <span className="text-xs font-mono text-[#B0B8D0] w-6 text-right">{Math.round(value * 10) / 10}</span>
         </div>
     );
 
-    const EffortDots = ({ effort }) => (
-        <div className="flex items-center gap-0.5">
-            {[1,2,3,4,5,6,7,8,9,10].map(i => (
-                <span key={i} className="w-1.5 h-1.5 rounded-full"
-                    style={{ background: i <= effort ? (effort <= 3 ? '#34ffbd' : effort <= 6 ? '#ffd040' : '#ff6b84') : '#1A2448' }} />
-            ))}
-        </div>
-    );
-
+    const effortColor = (e) => e <= 3 ? '#34ffbd' : e <= 6 ? '#ffd040' : '#ff6b84';
     const winLossColor = { high: '#ff6b84', medium: '#ffd040', low: '#48527A' };
 
     return (
@@ -4468,8 +4687,7 @@ const FeatureTrackerView = () => {
                             </div>
                             <h1 className="text-xl font-bold text-white">Feature Tracker</h1>
                             <p className="text-[#48527A] text-sm mt-0.5">
-                                {SCORED_FEATURES.length} features ranked by prioritization score
-                                <span className="ml-2 text-[#323860]">· Score = 40% revenue · 35% signal · 25% strategic fit · effort-adjusted</span>
+                                {SCORED_FEATURES.length} features · ranked by priority score
                             </p>
                         </div>
                         <div className="flex items-center gap-2">
@@ -4482,35 +4700,33 @@ const FeatureTrackerView = () => {
                             <select className="bg-[#0D1028] border border-[#2A3560] rounded-lg px-3 py-1.5 text-xs text-[#B0B8D0] focus:outline-none"
                                     value={sortBy} onChange={e => setSortBy(e.target.value)}>
                                 <option value="score">Sort: Priority Score</option>
-                                <option value="revenue">Sort: Revenue Weight</option>
-                                <option value="signal">Sort: Signal Frequency</option>
+                                <option value="arr">Sort: Est. ARR</option>
+                                <option value="requests">Sort: Request Count</option>
                                 <option value="effort">Sort: Lowest Effort</option>
-                                <option value="arr">Sort: Associated ARR</option>
+                                <option value="deals">Sort: Deal Signal</option>
+                                <option value="urgency">Sort: Urgency</option>
                             </select>
                         </div>
                     </div>
 
                     {/* Column headers */}
-                    <div className="grid gap-3" style={{gridTemplateColumns:'2rem 1fr 7rem 7rem 7rem 5rem 5rem'}}>
-                        <div className="text-xs text-[#323860] uppercase tracking-wider text-center">#</div>
-                        <div className="text-xs text-[#323860] uppercase tracking-wider">Feature</div>
-                        <div className="text-xs text-[#323860] uppercase tracking-wider">Revenue</div>
-                        <div className="text-xs text-[#323860] uppercase tracking-wider">Signal</div>
-                        <div className="text-xs text-[#323860] uppercase tracking-wider">Strategic</div>
-                        <div className="text-xs text-[#323860] uppercase tracking-wider">Effort</div>
-                        <div className="text-xs text-[#323860] uppercase tracking-wider text-right">Score</div>
+                    <div className="grid gap-3 px-3" style={{gridTemplateColumns:'2rem 1fr 6.5rem 6.5rem 6.5rem 6.5rem 4.5rem 5.5rem'}}>
+                        {['#','Feature','ARR Score','Requests','Strategic','Deals','Effort','Score'].map(h => (
+                            <div key={h} className="text-xs text-[#323860] uppercase tracking-wider">{h}</div>
+                        ))}
                     </div>
 
                     {/* Feature rows */}
                     <div className="space-y-1.5">
-                        {sorted.map((f, idx) => {
+                        {sorted.map(f => {
                             const isSelected = selectedId === f.id;
                             const scoreColor = f.score >= 8 ? '#34ffbd' : f.score >= 6 ? '#a5b4fc' : f.score >= 4 ? '#ffd040' : '#48527A';
+                            const hasDeadline = !!f.deadline;
                             return (
                                 <div key={f.id}
                                     onClick={() => setSelectedId(isSelected ? null : f.id)}
-                                    className={`grid gap-3 items-center px-3 py-3 rounded-xl border cursor-pointer transition-all ${isSelected ? 'border-[rgba(165,180,252,0.4)] bg-[rgba(165,180,252,0.07)]' : 'border-[#1A2448] bg-[#0D1028] hover:border-[#2A3560] hover:bg-[#0F122E]'}`}
-                                    style={{gridTemplateColumns:'2rem 1fr 7rem 7rem 7rem 5rem 5rem'}}>
+                                    className={`grid gap-3 items-center px-3 py-3 rounded-xl border cursor-pointer transition-all ${isSelected ? 'border-[rgba(165,180,252,0.4)] bg-[rgba(165,180,252,0.07)]' : `border-[#1A2448] bg-[#0D1028] hover:border-[#2A3560] hover:bg-[#0F122E] ${hasDeadline ? 'border-l-2 border-l-[rgba(255,107,132,0.5)]' : ''}`}`}
+                                    style={{gridTemplateColumns:'2rem 1fr 6.5rem 6.5rem 6.5rem 6.5rem 4.5rem 5.5rem'}}>
 
                                     {/* Rank */}
                                     <div className="text-center">
@@ -4520,40 +4736,56 @@ const FeatureTrackerView = () => {
                                     {/* Title + meta */}
                                     <div className="min-w-0">
                                         <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                            <span className="text-sm font-medium text-[#E8ECF8] truncate">{f.title}</span>
+                                            <span className="text-sm font-medium text-[#E8ECF8]">{f.title}</span>
                                             <StatusBadge status={f.status} />
+                                            {f.deadline && <DeadlineChip deadline={f.deadline} reason={f.deadlineReason} />}
                                             {f.competitorHas.length > 0 && (
                                                 <span className="text-xs px-1.5 py-0.5 rounded bg-[rgba(255,107,132,0.1)] text-[#ff6b84] border border-[rgba(255,107,132,0.2)]">
-                                                    {f.competitorHas.length} competitor{f.competitorHas.length>1?'s':''} have this
+                                                    {f.competitorHas.length} competitor{f.competitorHas.length > 1 ? 's' : ''} have this
                                                 </span>
                                             )}
                                         </div>
                                         <div className="flex items-center gap-2 flex-wrap">
                                             <SourceTag source={f.source} sourceId={f.sourceId} />
                                             <span className="text-xs text-[#323860]">{f.requestCount} requests</span>
-                                            <span className="text-xs text-[#323860]">${(f.associatedARR/1000).toFixed(0)}k ARR</span>
-                                            <span className="text-xs font-medium" style={{color: winLossColor[f.winLossImpact]}}>
-                                                {f.winLossImpact} win/loss impact
-                                            </span>
+                                            <span className="text-xs text-[#323860]">${(f.estimatedARR/1000).toFixed(0)}k ARR</span>
+                                            {f.deals.length > 0 && <span className="text-xs text-[#323860]">{f.deals.length} deal{f.deals.length > 1 ? 's' : ''} linked</span>}
+                                            {f.unlocks.length > 0 && <MultiplierBadge multiplier={f._multiplier} />}
                                         </div>
                                     </div>
 
-                                    {/* Revenue */}
-                                    <ScoreBar value={f.revenueWeight} color="#34ffbd" />
+                                    {/* ARR Score */}
+                                    <ScoreBar value={f._arrScore} color="#34ffbd" />
 
-                                    {/* Signal */}
-                                    <ScoreBar value={f.signalFrequency} color="#67e8f9" />
+                                    {/* Requests */}
+                                    <ScoreBar value={f._reqScore} color="#67e8f9" />
 
                                     {/* Strategic */}
                                     <ScoreBar value={f.strategicFit} color="#a5b4fc" />
 
-                                    {/* Effort */}
-                                    <EffortDots effort={f.effort} />
+                                    {/* Deal Signal */}
+                                    <ScoreBar value={f._dealScore} color="#ffd040" />
 
-                                    {/* Score */}
+                                    {/* Effort */}
+                                    <div className="flex items-center gap-1">
+                                        <span className="text-xs font-mono font-bold" style={{color: effortColor(f.effort)}}>{f.effort}</span>
+                                        <span className="text-xs text-[#323860]">/10</span>
+                                    </div>
+
+                                    {/* Score + multiplier */}
                                     <div className="text-right">
-                                        <span className="text-lg font-bold font-mono" style={{color: scoreColor}}>{f.score}</span>
-                                        <div className="text-xs text-[#323860]">{f.confidence}% conf</div>
+                                        <div className="flex items-baseline justify-end gap-1">
+                                            <span className="text-lg font-bold font-mono" style={{color: scoreColor}}>{f.score}</span>
+                                        </div>
+                                        {f._urgency > 0 && (
+                                            <div className="text-xs" style={{color: '#ff6b84'}}>+{f._urgency} urgency</div>
+                                        )}
+                                        {f.unlocks.length > 0 && (
+                                            <div className="text-xs" style={{color: '#c4b5fd'}}>×{f._multiplier} deps</div>
+                                        )}
+                                        {f._urgency === 0 && f.unlocks.length === 0 && (
+                                            <div className="text-xs text-[#323860]">{f.confidence}% conf</div>
+                                        )}
                                     </div>
                                 </div>
                             );
@@ -4562,24 +4794,24 @@ const FeatureTrackerView = () => {
 
                     {/* Methodology footnote */}
                     <div className="bg-[rgba(165,180,252,0.05)] border border-[rgba(165,180,252,0.12)] rounded-xl p-4 mt-2">
-                        <div className="text-xs font-medium text-[#a5b4fc] mb-2">Scoring Methodology</div>
-                        <div className="grid grid-cols-3 gap-4 text-xs text-[#48527A]">
+                        <div className="text-xs font-medium text-[#a5b4fc] mb-3">Scoring Methodology</div>
+                        <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-xs text-[#48527A] mb-3">
                             <div>
-                                <span className="text-[#34ffbd] font-medium">Revenue Weight (40%)</span>
-                                <p className="mt-0.5 leading-relaxed">ARR exposure of requesting accounts + deal stage weighting + historical correlation to closed-won deals.</p>
+                                <span className="text-[#34ffbd] font-medium">Step 1 — Normalize all inputs to 1–10</span>
+                                <p className="mt-0.5 leading-relaxed">ARR is log-scaled (so $500k = 10, $50k ≈ 7). Request count is linear (50 = 10). Deal score is pipeline-weighted by stage (negotiation = 1.0×, proposal = 0.6×, discovery = 0.3×), then log-scaled. Urgency scores from deadline: &lt;30d = 10, &lt;60d = 7, &lt;90d = 5. Strategic fit is entered directly as 1–10.</p>
                             </div>
                             <div>
-                                <span className="text-[#67e8f9] font-medium">Signal Frequency (35%)</span>
-                                <p className="mt-0.5 leading-relaxed">Frequency of feature mentions across call transcripts, support tickets, NPS surveys, and Slack signals — normalized per account.</p>
+                                <span className="text-[#67e8f9] font-medium">Step 2 — Weighted base score</span>
+                                <p className="mt-0.5 leading-relaxed font-mono text-[#323860]">base = (ARR × 0.25) + (Requests × 0.20) + (Strategic × 0.25) + (Deals × 0.20) + (Urgency × 0.10)</p>
                             </div>
                             <div>
-                                <span className="text-[#a5b4fc] font-medium">Strategic Fit (25%)</span>
-                                <p className="mt-0.5 leading-relaxed">Alignment with defined product pillars, differentiation from competitors, and long-term platform leverage score.</p>
+                                <span className="text-[#ffd040] font-medium">Step 3 — Effort as divisor</span>
+                                <p className="mt-0.5 leading-relaxed">Effort is not an additive score — it divides the base score. Formula: <span className="font-mono text-[#323860]">adjusted = base / (1 + (effort − 1) × 0.08)</span>. Effort 1 = no reduction. Effort 10 = divide by 1.72.</p>
                             </div>
-                        </div>
-                        <div className="mt-3 pt-3 border-t border-[rgba(165,180,252,0.1)] text-xs text-[#323860]">
-                            Effort penalty applied: each point above 5 subtracts 0.08 from the weighted score. Final score clipped to 0–10.
-                            Confidence % reflects data completeness and signal recency.
+                            <div>
+                                <span className="text-[#c4b5fd] font-medium">Step 4 — Dependency multiplier</span>
+                                <p className="mt-0.5 leading-relaxed">Each feature this unlocks downstream adds 15% to the final score: <span className="font-mono text-[#323860]">final = adjusted × (1 + unlocks × 0.15)</span>. Unlocking 3 features = ×1.45 boost. Score is clipped to 0–10.</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -4587,7 +4819,7 @@ const FeatureTrackerView = () => {
 
             {/* Detail panel */}
             {selected && (
-                <div className="w-80 flex-shrink-0 overflow-y-auto bg-[#08091F] p-5 space-y-4 fade-in">
+                <div className="w-84 flex-shrink-0 overflow-y-auto bg-[#08091F] border-l border-[#1A2448] p-5 space-y-4 fade-in" style={{width:340}}>
                     <div className="flex items-center justify-between">
                         <span className="text-xs text-[#48527A] uppercase tracking-wider">Feature Detail</span>
                         <button onClick={() => setSelectedId(null)} className="text-[#48527A] hover:text-[#B0B8D0] transition-colors">
@@ -4595,10 +4827,12 @@ const FeatureTrackerView = () => {
                         </button>
                     </div>
 
+                    {/* Title + status */}
                     <div>
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
                             <span className="text-xs font-mono text-[#a5b4fc]">#{selected.rank}</span>
                             <StatusBadge status={selected.status} />
+                            {selected.deadline && <DeadlineChip deadline={selected.deadline} reason={selected.deadlineReason} />}
                         </div>
                         <h2 className="text-sm font-semibold text-white leading-snug mb-1">{selected.title}</h2>
                         <p className="text-xs text-[#7A84A8] leading-relaxed">{selected.description}</p>
@@ -4608,21 +4842,26 @@ const FeatureTrackerView = () => {
                     <div className="bg-[#0D1028] border border-[#1A2448] rounded-xl p-3 space-y-2.5">
                         <div className="flex items-center justify-between mb-1">
                             <span className="text-xs text-[#48527A]">Priority Score</span>
-                            <span className="text-xl font-bold font-mono" style={{color: selected.score >= 8 ? '#34ffbd' : selected.score >= 6 ? '#a5b4fc' : '#ffd040'}}>
-                                {selected.score}
-                            </span>
+                            <div className="flex items-center gap-2">
+                                {selected.unlocks.length > 0 && <MultiplierBadge multiplier={selected._multiplier} />}
+                                <span className="text-2xl font-bold font-mono" style={{color: selected.score >= 8 ? '#34ffbd' : selected.score >= 6 ? '#a5b4fc' : '#ffd040'}}>
+                                    {selected.score}
+                                </span>
+                            </div>
                         </div>
                         {[
-                            { label: 'Revenue Weight', value: selected.revenueWeight, weight: '40%', color: '#34ffbd' },
-                            { label: 'Signal Frequency', value: selected.signalFrequency, weight: '35%', color: '#67e8f9' },
-                            { label: 'Strategic Fit', value: selected.strategicFit, weight: '25%', color: '#a5b4fc' },
+                            { label: 'Est. ARR',       value: selected._arrScore,    color: '#34ffbd',  weight: '25%' },
+                            { label: 'Request Count',  value: selected._reqScore,    color: '#67e8f9',  weight: '20%' },
+                            { label: 'Strategic Fit',  value: selected.strategicFit, color: '#a5b4fc',  weight: '25%' },
+                            { label: 'Deal Signal',    value: selected._dealScore,   color: '#ffd040',  weight: '20%' },
+                            { label: 'Urgency',        value: selected._urgency,     color: '#ff6b84',  weight: '10%' },
                         ].map(dim => (
                             <div key={dim.label}>
-                                <div className="flex items-center justify-between text-xs mb-1">
+                                <div className="flex items-center justify-between text-xs mb-0.5">
                                     <span className="text-[#7A84A8]">{dim.label}</span>
                                     <div className="flex items-center gap-2">
                                         <span className="text-[#323860]">{dim.weight}</span>
-                                        <span className="font-mono font-medium" style={{color: dim.color}}>{dim.value}</span>
+                                        <span className="font-mono font-medium" style={{color: dim.color}}>{Math.round(dim.value * 10) / 10}</span>
                                     </div>
                                 </div>
                                 <div className="h-1 rounded-full bg-[#1A2448] overflow-hidden">
@@ -4631,16 +4870,8 @@ const FeatureTrackerView = () => {
                             </div>
                         ))}
                         <div className="flex items-center justify-between text-xs pt-1 border-t border-[#1A2448]">
-                            <span className="text-[#7A84A8]">Effort</span>
-                            <div className="flex items-center gap-1.5">
-                                <div className="flex gap-0.5">
-                                    {[1,2,3,4,5,6,7,8,9,10].map(i => (
-                                        <span key={i} className="w-1.5 h-1.5 rounded-full"
-                                            style={{background: i <= selected.effort ? (selected.effort<=3?'#34ffbd':selected.effort<=6?'#ffd040':'#ff6b84') : '#1A2448'}} />
-                                    ))}
-                                </div>
-                                <span className="font-mono" style={{color: selected.effort<=3?'#34ffbd':selected.effort<=6?'#ffd040':'#ff6b84'}}>{selected.effort}/10</span>
-                            </div>
+                            <span className="text-[#7A84A8]">Effort (divisor)</span>
+                            <span className="font-mono font-bold" style={{color: effortColor(selected.effort)}}>{selected.effort}/10</span>
                         </div>
                         <div className="flex items-center justify-between text-xs">
                             <span className="text-[#7A84A8]">Confidence</span>
@@ -4648,61 +4879,128 @@ const FeatureTrackerView = () => {
                         </div>
                     </div>
 
-                    {/* Business signals */}
-                    <div className="space-y-2">
-                        <div className="text-xs text-[#48527A] uppercase tracking-wider">Business Signals</div>
-                        <div className="grid grid-cols-2 gap-2">
-                            <div className="bg-[#0D1028] border border-[#1A2448] rounded-lg p-2.5">
-                                <div className="text-xs text-[#48527A] mb-0.5">Requests</div>
-                                <div className="text-lg font-bold text-white">{selected.requestCount}</div>
+                    {/* Deadline */}
+                    {selected.deadline && (
+                        <div className="bg-[rgba(255,107,132,0.07)] border border-[rgba(255,107,132,0.2)] rounded-xl p-3 space-y-1">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs text-[#48527A] uppercase tracking-wider">Deadline</span>
+                                <DeadlineChip deadline={selected.deadline} reason={selected.deadlineReason} />
                             </div>
-                            <div className="bg-[#0D1028] border border-[#1A2448] rounded-lg p-2.5">
-                                <div className="text-xs text-[#48527A] mb-0.5">Associated ARR</div>
-                                <div className="text-lg font-bold text-white">${(selected.associatedARR/1000).toFixed(0)}k</div>
+                            {selected.deadlineReason && (
+                                <p className="text-xs text-[#7A84A8] leading-relaxed">{selected.deadlineReason}</p>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Linked deals */}
+                    {selected.deals.length > 0 && (
+                        <div className="space-y-2">
+                            <div className="text-xs text-[#48527A] uppercase tracking-wider">Linked Deals</div>
+                            <div className="space-y-1.5">
+                                {selected.deals.map((d, i) => (
+                                    <div key={i} className="flex items-center justify-between bg-[#0D1028] rounded-lg px-3 py-2 border border-[#1A2448]">
+                                        <div>
+                                            <div className="text-xs font-medium text-[#E8ECF8]">{d.name}</div>
+                                            <StageBadge stage={d.stage} />
+                                        </div>
+                                        <span className="text-xs font-mono text-[#B0B8D0]">${(d.arr/1000).toFixed(0)}k</span>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="text-xs text-[#48527A] pt-0.5">
+                                Total: <span className="text-white font-mono">${(selected.deals.reduce((s,d)=>s+d.arr,0)/1000).toFixed(0)}k</span> in pipeline
                             </div>
                         </div>
-                        <div className="bg-[#0D1028] border border-[#1A2448] rounded-lg p-2.5">
-                            <div className="text-xs text-[#48527A] mb-1">Win / Loss Impact</div>
-                            <span className="text-xs font-medium capitalize" style={{color: winLossColor[selected.winLossImpact]}}>
-                                {selected.winLossImpact} impact
-                            </span>
-                        </div>
-                    </div>
+                    )}
 
                     {/* Requested by */}
                     <div className="space-y-2">
                         <div className="text-xs text-[#48527A] uppercase tracking-wider">Requested By</div>
-                        <div className="space-y-1">
+                        <div className="space-y-1.5">
                             {selected.requestedBy.map((r, i) => (
-                                <div key={i} className="text-xs text-[#7A84A8] flex items-center gap-1.5">
-                                    <span className="w-1 h-1 rounded-full bg-[#2A3560] flex-shrink-0" />
-                                    {r}
+                                <div key={i} className="flex items-start gap-2">
+                                    <span className="text-xs font-medium px-1.5 py-0.5 rounded flex-shrink-0"
+                                        style={{ background: SOURCE_COLOR[r.source] + '18', color: SOURCE_COLOR[r.source] }}>
+                                        {r.source}
+                                    </span>
+                                    <div className="min-w-0">
+                                        <div className="text-xs font-medium text-[#E8ECF8]">{r.account}</div>
+                                        {r.note && <div className="text-xs text-[#48527A] leading-relaxed">{r.note}</div>}
+                                    </div>
                                 </div>
                             ))}
                         </div>
                     </div>
 
-                    {/* Competitors */}
-                    {selected.competitorHas.length > 0 && (
+                    {/* Impact + metrics */}
+                    <div className="space-y-2">
+                        <div className="text-xs text-[#48527A] uppercase tracking-wider">Impact Type</div>
+                        <div className="flex flex-wrap gap-1.5">
+                            {selected.impactType.map(t => <ImpactBadge key={t} type={t} />)}
+                        </div>
+                        <div className="flex flex-wrap gap-1.5 mt-1">
+                            {selected.metricsDriven.map(m => (
+                                <span key={m} className="text-xs px-1.5 py-0.5 bg-[#111435] text-[#7A84A8] border border-[#1A2448] rounded">{m}</span>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Dependencies */}
+                    {selected.unlocks.length > 0 && (
                         <div className="space-y-2">
+                            <div className="text-xs text-[#48527A] uppercase tracking-wider">Unlocks Downstream</div>
+                            <div className="space-y-1">
+                                {selected.unlocks.map(uid => {
+                                    const f = SCORED_FEATURES.find(x => x.id === uid);
+                                    return f ? (
+                                        <div key={uid} className="flex items-center gap-2 text-xs">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-[#c4b5fd] flex-shrink-0" />
+                                            <span className="text-[#c4b5fd]">{f.title}</span>
+                                        </div>
+                                    ) : null;
+                                })}
+                            </div>
+                            <div className="text-xs text-[#323860]">Multiplier: <span className="text-[#c4b5fd] font-mono">×{selected._multiplier}</span></div>
+                        </div>
+                    )}
+                    {selected.blockedBy.length > 0 && (
+                        <div className="space-y-2">
+                            <div className="text-xs text-[#48527A] uppercase tracking-wider">Blocked By</div>
+                            <div className="space-y-1">
+                                {selected.blockedBy.map(bid => {
+                                    const f = SCORED_FEATURES.find(x => x.id === bid);
+                                    return f ? (
+                                        <div key={bid} className="flex items-center gap-2 text-xs">
+                                            <Icon name="warning" size={11} color="#ff6b84" />
+                                            <span className="text-[#ff6b84]">{f.title}</span>
+                                        </div>
+                                    ) : null;
+                                })}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Competitor parity */}
+                    {selected.competitorHas.length > 0 && (
+                        <div className="space-y-1">
                             <div className="text-xs text-[#48527A] uppercase tracking-wider">Competitor Parity</div>
                             <div className="flex items-center gap-1.5 text-xs text-[#ff6b84]">
                                 <Icon name="warning" size={12} color="#ff6b84" />
-                                {selected.competitorHas.length} competitor{selected.competitorHas.length>1?'s have':' has'} this feature
+                                {selected.competitorHas.length} competitor{selected.competitorHas.length > 1 ? 's have' : ' has'} this feature
                             </div>
                         </div>
                     )}
 
                     {/* Notes */}
                     {selected.notes && (
-                        <div className="space-y-2">
+                        <div className="space-y-1">
                             <div className="text-xs text-[#48527A] uppercase tracking-wider">Notes</div>
                             <p className="text-xs text-[#7A84A8] leading-relaxed italic">"{selected.notes}"</p>
                         </div>
                     )}
 
                     {/* Tags */}
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="flex flex-wrap gap-1.5 pb-2">
                         {selected.tags.map(t => (
                             <span key={t} className="text-xs px-2 py-0.5 bg-[#111435] text-[#48527A] rounded">{t}</span>
                         ))}
@@ -4720,36 +5018,37 @@ const ValueEffortMatrix = () => {
     const [hoveredId, setHoveredId] = useState(null);
     const [selectedId, setSelectedId] = useState(null);
 
-    // Value = weighted average of revenue + signal + strategic (same weights as score, ignoring effort)
+    // Value = weighted inputs excluding effort (same weights, re-normalized to sum to 1)
+    // ARR 0.278, Requests 0.222, Strategic 0.278, Deals 0.222
     const features = SCORED_FEATURES.map(f => ({
         ...f,
-        value: Math.round(((f.revenueWeight * 0.40) + (f.signalFrequency * 0.35) + (f.strategicFit * 0.25)) * 10) / 10,
+        value: Math.min(10, Math.round(
+            (f._arrScore * 0.278 + f._reqScore * 0.222 + f.strategicFit * 0.278 + f._dealScore * 0.222) * 10
+        ) / 10),
     }));
 
     const hovered  = hoveredId  ? features.find(f => f.id === hoveredId)  : null;
     const selected = selectedId ? features.find(f => f.id === selectedId) : null;
     const active   = hovered || selected;
 
-    // Plot area: effort on X (1=left, 10=right), value on Y (10=top, 1=bottom)
-    // Map to % positions inside the grid
     const toX = (effort) => ((effort - 1) / 9) * 100;
-    const toY = (value)  => (1 - (value - 5) / 5) * 100; // value 5–10 mapped to 0–100%
+    const toY = (value)  => Math.max(4, Math.min(94, (1 - (value - 4) / 6) * 100));
 
     const quadrantColor = (f) => {
-        const x = f.effort;
-        const y = f.value;
-        if (y >= 7.5 && x <= 5) return '#34ffbd'; // High value, low effort → Do Now
-        if (y >= 7.5 && x >  5) return '#a5b4fc'; // High value, high effort → Strategic
-        if (y <  7.5 && x <= 5) return '#ffd040'; // Low value, low effort → Fill-in
-        return '#ff6b84';                           // Low value, high effort → Avoid
+        if (f.value >= 7 && f.effort <= 5) return '#34ffbd';
+        if (f.value >= 7 && f.effort >  5) return '#a5b4fc';
+        if (f.value <  7 && f.effort <= 5) return '#ffd040';
+        return '#ff6b84';
     };
-
     const quadrantLabel = (f) => {
-        if (f.value >= 7.5 && f.effort <= 5) return 'Do Now';
-        if (f.value >= 7.5 && f.effort >  5) return 'Strategic';
-        if (f.value <  7.5 && f.effort <= 5) return 'Fill-in';
+        if (f.value >= 7 && f.effort <= 5) return 'Do Now';
+        if (f.value >= 7 && f.effort >  5) return 'Strategic';
+        if (f.value <  7 && f.effort <= 5) return 'Fill-in';
         return 'Avoid';
     };
+
+    // Dot size scales with unlocks (base 12px, +3px per unlock, max 24px)
+    const dotSize = (f) => Math.min(24, 12 + (f.unlocks ? f.unlocks.length * 4 : 0));
 
     return (
         <div className="flex-1 overflow-y-auto fade-in">
@@ -4760,82 +5059,97 @@ const ValueEffortMatrix = () => {
                         <span>Priorities</span><span>›</span><span className="text-[#B0B8D0]">Value vs Effort</span>
                     </div>
                     <h1 className="text-xl font-bold text-white">Value vs Effort Matrix</h1>
-                    <p className="text-[#48527A] text-sm mt-0.5">Plot features by composite value score against build effort. Hover or click a dot for detail.</p>
+                    <p className="text-[#48527A] text-sm mt-0.5">
+                        Dot size reflects dependency leverage — larger dots unlock more downstream features.
+                        Hover or click for detail.
+                    </p>
                 </div>
 
                 {/* Legend */}
-                <div className="flex items-center gap-5">
+                <div className="flex items-center gap-6 flex-wrap">
                     {[
-                        { label: 'Do Now', color: '#34ffbd', desc: 'High value · Low effort' },
+                        { label: 'Do Now',    color: '#34ffbd', desc: 'High value · Low effort' },
                         { label: 'Strategic', color: '#a5b4fc', desc: 'High value · High effort' },
-                        { label: 'Fill-in', color: '#ffd040', desc: 'Low value · Low effort' },
-                        { label: 'Avoid', color: '#ff6b84', desc: 'Low value · High effort' },
+                        { label: 'Fill-in',   color: '#ffd040', desc: 'Low value · Low effort'  },
+                        { label: 'Avoid',     color: '#ff6b84', desc: 'Low value · High effort' },
                     ].map(q => (
                         <div key={q.label} className="flex items-center gap-1.5">
                             <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{background: q.color}} />
-                            <div>
-                                <span className="text-xs font-medium" style={{color: q.color}}>{q.label}</span>
-                                <span className="text-xs text-[#323860] ml-1.5">{q.desc}</span>
-                            </div>
+                            <span className="text-xs font-medium" style={{color: q.color}}>{q.label}</span>
+                            <span className="text-xs text-[#323860]">{q.desc}</span>
                         </div>
                     ))}
+                    <div className="flex items-center gap-1.5 ml-auto">
+                        <span className="w-2 h-2 rounded-full bg-[#48527A]" />
+                        <span className="w-3.5 h-3.5 rounded-full bg-[#48527A]" />
+                        <span className="text-xs text-[#323860]">dot size = # features unlocked</span>
+                    </div>
                 </div>
 
-                {/* Matrix + detail side by side */}
+                {/* Matrix + detail panel */}
                 <div className="flex gap-4 items-start">
                     {/* Matrix */}
                     <div className="flex-1 min-w-0">
-                        <div className="relative bg-[#0D1028] border border-[#1A2448] rounded-xl overflow-hidden" style={{aspectRatio:'1.6/1', minHeight:380}}>
+                        <div className="relative bg-[#0D1028] border border-[#1A2448] rounded-xl overflow-hidden" style={{aspectRatio:'1.7/1', minHeight:380}}>
                             {/* Quadrant backgrounds */}
                             <div className="absolute inset-0 grid" style={{gridTemplateColumns:'50% 50%', gridTemplateRows:'50% 50%'}}>
-                                <div className="bg-[rgba(52,255,189,0.03)] border-r border-b border-[#1A2448]" />
-                                <div className="bg-[rgba(165,180,252,0.03)] border-b border-[#1A2448]" />
-                                <div className="bg-[rgba(255,208,64,0.03)] border-r border-[#1A2448]" />
-                                <div className="bg-[rgba(255,107,132,0.03)]" />
+                                <div className="bg-[rgba(52,255,189,0.025)] border-r border-b border-[#1A2448]" />
+                                <div className="bg-[rgba(165,180,252,0.025)] border-b border-[#1A2448]" />
+                                <div className="bg-[rgba(255,208,64,0.025)] border-r border-[#1A2448]" />
+                                <div className="bg-[rgba(255,107,132,0.025)]" />
                             </div>
-
                             {/* Quadrant labels */}
-                            <div className="absolute top-3 left-3 text-xs font-medium text-[#34ffbd] opacity-40 uppercase tracking-wider">Do Now</div>
-                            <div className="absolute top-3 right-3 text-xs font-medium text-[#a5b4fc] opacity-40 uppercase tracking-wider text-right">Strategic</div>
-                            <div className="absolute bottom-3 left-3 text-xs font-medium text-[#ffd040] opacity-40 uppercase tracking-wider">Fill-in</div>
-                            <div className="absolute bottom-3 right-3 text-xs font-medium text-[#ff6b84] opacity-40 uppercase tracking-wider text-right">Avoid</div>
-
+                            <div className="absolute top-3 left-4 text-xs font-semibold text-[#34ffbd] opacity-30 uppercase tracking-wider pointer-events-none">Do Now</div>
+                            <div className="absolute top-3 right-4 text-xs font-semibold text-[#a5b4fc] opacity-30 uppercase tracking-wider text-right pointer-events-none">Strategic</div>
+                            <div className="absolute bottom-8 left-4 text-xs font-semibold text-[#ffd040] opacity-30 uppercase tracking-wider pointer-events-none">Fill-in</div>
+                            <div className="absolute bottom-8 right-4 text-xs font-semibold text-[#ff6b84] opacity-30 uppercase tracking-wider text-right pointer-events-none">Avoid</div>
                             {/* Axis labels */}
-                            <div className="absolute bottom-0 left-0 right-0 flex justify-between px-4 pb-1">
+                            <div className="absolute bottom-1 left-0 right-0 flex justify-between px-5 pointer-events-none">
                                 <span className="text-xs text-[#323860]">Low Effort</span>
                                 <span className="text-xs text-[#48527A] font-medium">← Effort →</span>
                                 <span className="text-xs text-[#323860]">High Effort</span>
                             </div>
-                            <div className="absolute top-0 bottom-0 left-0 flex flex-col justify-between py-4 pl-1">
+                            <div className="absolute top-0 bottom-6 left-0 flex flex-col justify-between py-4 pl-1 pointer-events-none">
                                 <span className="text-xs text-[#323860]" style={{writingMode:'vertical-rl',transform:'rotate(180deg)'}}>High Value</span>
                                 <span className="text-xs text-[#323860]" style={{writingMode:'vertical-rl',transform:'rotate(180deg)'}}>Low Value</span>
                             </div>
 
                             {/* Plot area */}
-                            <div className="absolute inset-0 mx-8 mb-6 mt-2">
+                            <div className="absolute inset-0 ml-6 mr-2 mb-6 mt-1">
                                 {features.map(f => {
                                     const x = toX(f.effort);
                                     const y = toY(f.value);
                                     const color = quadrantColor(f);
+                                    const size  = dotSize(f);
                                     const isActive = hoveredId === f.id || selectedId === f.id;
+                                    const dimmed   = (hoveredId && hoveredId !== f.id);
                                     return (
                                         <div key={f.id}
-                                            className="absolute cursor-pointer transition-transform"
+                                            className="absolute cursor-pointer"
                                             style={{
-                                                left: `${x}%`,
-                                                top: `${Math.max(5, Math.min(92, y))}%`,
-                                                transform: `translate(-50%, -50%) scale(${isActive ? 1.8 : 1})`,
+                                                left: `${x}%`, top: `${y}%`,
+                                                transform: `translate(-50%, -50%) scale(${isActive ? 1.7 : 1})`,
                                                 zIndex: isActive ? 10 : 1,
+                                                transition: 'transform 0.15s ease, opacity 0.15s ease',
+                                                opacity: dimmed ? 0.3 : 1,
                                             }}
                                             onMouseEnter={() => setHoveredId(f.id)}
                                             onMouseLeave={() => setHoveredId(null)}
                                             onClick={() => setSelectedId(selectedId === f.id ? null : f.id)}>
-                                            <div className="w-3 h-3 rounded-full transition-all"
-                                                style={{
-                                                    background: color,
-                                                    boxShadow: isActive ? `0 0 0 2px ${color}40, 0 0 8px ${color}60` : `0 0 4px ${color}60`,
-                                                    opacity: hoveredId && hoveredId !== f.id ? 0.35 : 1,
-                                                }} />
+                                            <div style={{
+                                                width: size, height: size,
+                                                borderRadius: '50%',
+                                                background: color,
+                                                boxShadow: isActive
+                                                    ? `0 0 0 2px ${color}50, 0 0 10px ${color}70`
+                                                    : `0 0 5px ${color}50`,
+                                            }} />
+                                            {f.unlocks && f.unlocks.length > 0 && (
+                                                <div className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full flex items-center justify-center text-white"
+                                                    style={{background:'#c4b5fd', fontSize:8, fontWeight:700}}>
+                                                    {f.unlocks.length}
+                                                </div>
+                                            )}
                                         </div>
                                     );
                                 })}
@@ -4843,102 +5157,125 @@ const ValueEffortMatrix = () => {
                         </div>
                     </div>
 
-                    {/* Hover / click detail */}
+                    {/* Detail panel */}
                     <div className="w-72 flex-shrink-0">
                         {active ? (
                             <div className="bg-[#0D1028] border border-[#1A2448] rounded-xl p-4 space-y-3 fade-in">
                                 <div className="flex items-center gap-2">
                                     <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{background: quadrantColor(active)}} />
-                                    <span className="text-xs font-medium uppercase tracking-wider" style={{color: quadrantColor(active)}}>{quadrantLabel(active)}</span>
+                                    <span className="text-xs font-semibold uppercase tracking-wider" style={{color: quadrantColor(active)}}>{quadrantLabel(active)}</span>
+                                    {active.deadline && <DeadlineChip deadline={active.deadline} reason={active.deadlineReason} />}
                                 </div>
                                 <div>
                                     <div className="text-sm font-semibold text-white mb-1">{active.title}</div>
                                     <p className="text-xs text-[#7A84A8] leading-relaxed">{active.description}</p>
                                 </div>
                                 <div className="grid grid-cols-2 gap-2 text-xs">
-                                    <div className="bg-[#090B1E] rounded-lg p-2">
-                                        <div className="text-[#48527A] mb-0.5">Value Score</div>
-                                        <div className="text-base font-bold font-mono" style={{color: quadrantColor(active)}}>{active.value}</div>
-                                    </div>
-                                    <div className="bg-[#090B1E] rounded-lg p-2">
-                                        <div className="text-[#48527A] mb-0.5">Effort</div>
-                                        <div className="text-base font-bold font-mono" style={{color: active.effort<=3?'#34ffbd':active.effort<=6?'#ffd040':'#ff6b84'}}>{active.effort}/10</div>
-                                    </div>
-                                    <div className="bg-[#090B1E] rounded-lg p-2">
-                                        <div className="text-[#48527A] mb-0.5">Priority Score</div>
-                                        <div className="text-base font-bold font-mono text-white">{active.score}</div>
-                                    </div>
-                                    <div className="bg-[#090B1E] rounded-lg p-2">
-                                        <div className="text-[#48527A] mb-0.5">Rank</div>
-                                        <div className="text-base font-bold font-mono text-white">#{active.rank}</div>
-                                    </div>
+                                    {[
+                                        { label: 'Value Score', val: active.value, color: quadrantColor(active) },
+                                        { label: 'Effort',      val: `${active.effort}/10`, color: active.effort <= 3 ? '#34ffbd' : active.effort <= 6 ? '#ffd040' : '#ff6b84' },
+                                        { label: 'Priority',    val: active.score, color: '#white' },
+                                        { label: 'Rank',        val: `#${active.rank}`, color: '#white' },
+                                    ].map(item => (
+                                        <div key={item.label} className="bg-[#090B1E] rounded-lg p-2">
+                                            <div className="text-[#48527A] mb-0.5">{item.label}</div>
+                                            <div className="text-base font-bold font-mono" style={{color: item.color === '#white' ? '#E8ECF8' : item.color}}>{item.val}</div>
+                                        </div>
+                                    ))}
                                 </div>
                                 <div className="flex items-center justify-between text-xs">
                                     <span className="text-[#48527A]">{active.requestCount} requests</span>
-                                    <span className="text-[#B0B8D0]">${(active.associatedARR/1000).toFixed(0)}k ARR</span>
-                                    <StatusBadge status={active.status} />
+                                    <span className="text-[#B0B8D0]">${(active.estimatedARR/1000).toFixed(0)}k ARR</span>
+                                    {active.deals.length > 0 && <span className="text-[#ffd040]">{active.deals.length} deals</span>}
                                 </div>
+                                {active.unlocks && active.unlocks.length > 0 && (
+                                    <div className="border-t border-[#1A2448] pt-2 space-y-1">
+                                        <div className="text-xs text-[#c4b5fd] font-medium flex items-center gap-1">
+                                            <MultiplierBadge multiplier={active._multiplier} />
+                                            <span>Unlocks {active.unlocks.length} feature{active.unlocks.length > 1 ? 's' : ''}</span>
+                                        </div>
+                                        {active.unlocks.map(uid => {
+                                            const uf = features.find(x => x.id === uid);
+                                            return uf ? (
+                                                <div key={uid} className="text-xs text-[#7A84A8] flex items-center gap-1">
+                                                    <span className="w-1 h-1 rounded-full bg-[#c4b5fd]" />
+                                                    {uf.title}
+                                                </div>
+                                            ) : null;
+                                        })}
+                                    </div>
+                                )}
                                 {active.notes && (
                                     <p className="text-xs text-[#7A84A8] italic border-t border-[#1A2448] pt-2">"{active.notes}"</p>
                                 )}
+                                <div className="flex flex-wrap gap-1 pt-1">
+                                    {active.impactType.map(t => <ImpactBadge key={t} type={t} />)}
+                                </div>
                             </div>
                         ) : (
-                            <div className="bg-[#0D1028] border border-[#1A2448] rounded-xl p-4 h-full flex flex-col gap-3">
+                            <div className="bg-[#0D1028] border border-[#1A2448] rounded-xl p-4 space-y-3">
                                 <div className="text-xs text-[#48527A] uppercase tracking-wider">Quadrant Summary</div>
                                 {[
-                                    { label: 'Do Now', color: '#34ffbd', desc: 'High value, low effort', key: (f) => f.value >= 7.5 && f.effort <= 5 },
-                                    { label: 'Strategic', color: '#a5b4fc', desc: 'High value, high effort', key: (f) => f.value >= 7.5 && f.effort > 5 },
-                                    { label: 'Fill-in', color: '#ffd040', desc: 'Low value, low effort', key: (f) => f.value < 7.5 && f.effort <= 5 },
-                                    { label: 'Avoid', color: '#ff6b84', desc: 'Low value, high effort', key: (f) => f.value < 7.5 && f.effort > 5 },
+                                    { label: 'Do Now',    color: '#34ffbd', fn: f => f.value >= 7 && f.effort <= 5 },
+                                    { label: 'Strategic', color: '#a5b4fc', fn: f => f.value >= 7 && f.effort >  5 },
+                                    { label: 'Fill-in',   color: '#ffd040', fn: f => f.value <  7 && f.effort <= 5 },
+                                    { label: 'Avoid',     color: '#ff6b84', fn: f => f.value <  7 && f.effort >  5 },
                                 ].map(q => {
-                                    const items = features.filter(q.key);
+                                    const items = features.filter(q.fn);
                                     return (
-                                        <div key={q.label} className="flex items-center gap-3">
-                                            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{background: q.color}} />
+                                        <div key={q.label} className="flex items-start gap-2.5">
+                                            <span className="w-2 h-2 rounded-full mt-1 flex-shrink-0" style={{background: q.color}} />
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center justify-between">
                                                     <span className="text-xs font-medium" style={{color: q.color}}>{q.label}</span>
                                                     <span className="text-xs font-bold text-white">{items.length}</span>
                                                 </div>
-                                                <div className="text-xs text-[#323860]">{q.desc}</div>
                                                 {items.length > 0 && (
-                                                    <div className="text-xs text-[#48527A] truncate mt-0.5">{items.map(f=>f.title.split(' ').slice(0,3).join(' ')).join(', ')}</div>
+                                                    <div className="text-xs text-[#48527A] truncate mt-0.5">
+                                                        {items.slice(0,2).map(f => f.title.split(' ').slice(0,2).join(' ')).join(' · ')}
+                                                        {items.length > 2 && ` +${items.length - 2}`}
+                                                    </div>
                                                 )}
                                             </div>
                                         </div>
                                     );
                                 })}
-                                <p className="text-xs text-[#323860] mt-auto">Hover or click a dot to see feature detail</p>
+                                <p className="text-xs text-[#323860] pt-1">Hover or click a dot to see detail</p>
                             </div>
                         )}
                     </div>
                 </div>
 
-                {/* Bottom: ranked list for this view */}
+                {/* Bottom quadrant list */}
                 <div className="bg-[#0D1028] border border-[#1A2448] rounded-xl p-4 space-y-3">
                     <div className="text-sm font-medium text-white">All Features by Quadrant</div>
                     <div className="grid grid-cols-2 gap-4">
                         {[
-                            { label: 'Do Now', color: '#34ffbd', filter: (f) => f.value >= 7.5 && f.effort <= 5 },
-                            { label: 'Strategic', color: '#a5b4fc', filter: (f) => f.value >= 7.5 && f.effort > 5 },
-                            { label: 'Fill-in', color: '#ffd040', filter: (f) => f.value < 7.5 && f.effort <= 5 },
-                            { label: 'Avoid', color: '#ff6b84', filter: (f) => f.value < 7.5 && f.effort > 5 },
+                            { label: 'Do Now',    color: '#34ffbd', fn: f => f.value >= 7 && f.effort <= 5 },
+                            { label: 'Strategic', color: '#a5b4fc', fn: f => f.value >= 7 && f.effort >  5 },
+                            { label: 'Fill-in',   color: '#ffd040', fn: f => f.value <  7 && f.effort <= 5 },
+                            { label: 'Avoid',     color: '#ff6b84', fn: f => f.value <  7 && f.effort >  5 },
                         ].map(q => {
-                            const items = features.filter(q.filter).sort((a,b) => b.score - a.score);
+                            const items = features.filter(q.fn).sort((a,b) => b.score - a.score);
                             if (items.length === 0) return null;
                             return (
-                                <div key={q.label} className="space-y-1.5">
-                                    <div className="flex items-center gap-1.5 mb-2">
+                                <div key={q.label} className="space-y-1">
+                                    <div className="flex items-center gap-1.5 mb-1.5">
                                         <span className="w-2 h-2 rounded-full" style={{background: q.color}} />
-                                        <span className="text-xs font-medium uppercase tracking-wider" style={{color: q.color}}>{q.label}</span>
+                                        <span className="text-xs font-semibold uppercase tracking-wider" style={{color: q.color}}>{q.label}</span>
                                         <span className="text-xs text-[#323860]">({items.length})</span>
                                     </div>
                                     {items.map(f => (
-                                        <div key={f.id} className="flex items-center gap-2 py-1.5 px-2 rounded-lg hover:bg-[#111435] cursor-pointer transition-colors"
+                                        <div key={f.id}
+                                            className="flex items-center gap-2 py-1.5 px-2 rounded-lg hover:bg-[#111435] cursor-pointer transition-colors"
                                             onClick={() => setSelectedId(selectedId === f.id ? null : f.id)}>
                                             <span className="text-xs font-mono text-[#48527A] w-5">#{f.rank}</span>
                                             <span className="flex-1 text-xs text-[#B0B8D0] truncate">{f.title}</span>
-                                            <span className="text-xs font-bold font-mono" style={{color: q.color}}>{f.score}</span>
+                                            {f.deadline && <DeadlineChip deadline={f.deadline} />}
+                                            {f.unlocks && f.unlocks.length > 0 && (
+                                                <span className="text-xs font-mono text-[#c4b5fd]">×{f._multiplier}</span>
+                                            )}
+                                            <span className="text-xs font-bold font-mono flex-shrink-0" style={{color: q.color}}>{f.score}</span>
                                         </div>
                                     ))}
                                 </div>
@@ -4950,7 +5287,6 @@ const ValueEffortMatrix = () => {
         </div>
     );
 };
-
 
 // ─── App Shell ────────────────────────────────────────────────────────────────
 // Placeholder component for modules not yet built
